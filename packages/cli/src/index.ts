@@ -2,7 +2,7 @@
 import { auditDiff, builtInRules } from '@patchproof/core';
 import { writeFileSync } from 'node:fs';
 import { parseArgs } from './args.js';
-import { loadConfig, resolveAuditRules, resolveFailOn } from './config.js';
+import { loadConfig, resolveAuditRules, resolveFailOn, resolveLanguage } from './config.js';
 import { formatResult, formatRules } from './format.js';
 import { helpText, initConfigText } from './help.js';
 import { readDiffInput } from './input.js';
@@ -42,13 +42,14 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
 
     const rules = resolveAuditRules(builtInRules, config);
     const failOn = resolveFailOn(options.failOn, config);
+    const lang = resolveLanguage(options.lang, config);
     const output = options.outputProvided ? options.output ?? 'text' : 'text';
     const result = auditDiff(diff, {
       rules,
       minimumSeverity: failOn
     });
 
-    console.log(formatResult(result, output));
+    console.log(formatResult(result, output, lang));
 
     return shouldFail(result, failOn) ? 1 : 0;
   } catch (error) {

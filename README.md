@@ -44,6 +44,7 @@ patchproof init
 ## Config
 
 `patchproof.config.json` can live in the current directory or any parent directory. Use it to set `failOn` and to enable or disable built-in rules.
+It also supports `language: "en"` or `language: "es"` for report output. English is the default.
 
 ## AST Rules
 

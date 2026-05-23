@@ -1,10 +1,12 @@
 import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import type { AuditRule, Severity } from '@patchproof/core';
+import type { Language } from './args.js';
 
 export interface PatchProofConfig {
   readonly schema?: string;
   readonly failOn?: Severity;
+  readonly language?: Language;
   readonly privacy?: {
     readonly sendCodeToCloud?: boolean;
     readonly llmExplanations?: boolean;
@@ -56,6 +58,10 @@ export function resolveAuditRules(allRules: readonly AuditRule[], config: PatchP
 
 export function resolveFailOn(cliValue: Severity | null, config: PatchProofConfig | null): Severity {
   return cliValue ?? config?.failOn ?? 'high';
+}
+
+export function resolveLanguage(cliValue: Language | null, config: PatchProofConfig | null): Language {
+  return cliValue ?? config?.language ?? 'en';
 }
 
 function findConfigFile(startDir: string): string | null {

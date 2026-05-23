@@ -38,4 +38,11 @@ describe('formatResult', () => {
 
     expect(sarif.runs[0].results).toHaveLength(1);
   });
+
+  it('formats Spanish markdown reports', () => {
+    const formatted = formatResult(result, 'markdown', 'es');
+
+    expect(formatted).toContain('# Informe PatchProof');
+    expect(formatted).toContain('Clave API de OpenAI comprometida en código');
+  });
 });

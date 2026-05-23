@@ -1,4 +1,5 @@
 export type OutputFormat = 'text' | 'json' | 'markdown' | 'sarif';
+export type Language = 'en' | 'es';
 
 export interface CliOptions {
   readonly command: 'audit' | 'init' | 'rules' | 'help' | 'version';
@@ -8,10 +9,13 @@ export interface CliOptions {
   readonly outputProvided: boolean;
   readonly failOn: 'critical' | 'high' | 'medium' | 'low' | null;
   readonly failOnProvided: boolean;
+  readonly lang: Language | null;
+  readonly langProvided: boolean;
 }
 
 const validFormats = new Set<OutputFormat>(['text', 'json', 'markdown', 'sarif']);
 const validSeverities = new Set<CliOptions['failOn']>(['critical', 'high', 'medium', 'low']);
+const validLanguages = new Set<Language>(['en', 'es']);
 
 export function parseArgs(argv: string[]): CliOptions {
   const [command = 'help', ...rest] = argv;
@@ -42,6 +46,8 @@ export function parseArgs(argv: string[]): CliOptions {
   let outputProvided = false;
   let failOn: CliOptions['failOn'] = null;
   let failOnProvided = false;
+  let lang: Language | null = null;
+  let langProvided = false;
 
   for (let index = 0; index < rest.length; index += 1) {
     const value = rest[index];
@@ -79,10 +85,21 @@ export function parseArgs(argv: string[]): CliOptions {
       continue;
     }
 
+    if (value === '--lang') {
+      const candidate = requiredValue(rest, index, '--lang') as Language;
+      if (!validLanguages.has(candidate)) {
+        throw new Error(`Invalid --lang "${candidate}". Use en or es.`);
+      }
+      lang = candidate;
+      langProvided = true;
+      index += 1;
+      continue;
+    }
+
     throw new Error(`Unknown option "${value}".`);
   }
 
-  return { command: 'audit', file, useGitDiff, output, outputProvided, failOn, failOnProvided };
+  return { command: 'audit', file, useGitDiff, output, outputProvided, failOn, failOnProvided, lang, langProvided };
 }
 
 function defaultOptions(command: CliOptions['command']): CliOptions {
@@ -92,7 +109,9 @@ function defaultOptions(command: CliOptions['command']): CliOptions {
     output: 'text',
     outputProvided: false,
     failOn: null,
-    failOnProvided: false
+    failOnProvided: false,
+    lang: null,
+    langProvided: false
   };
 }
 

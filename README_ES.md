@@ -130,6 +130,7 @@ node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --fail-on
 ## Configuración
 
 `patchproof.config.json` puede vivir en el directorio actual o en cualquier directorio padre. Sirve para definir `failOn` y activar o desactivar reglas internas.
+También soporta `language: "en"` o `language: "es"` para el idioma de los reportes. El idioma por defecto es inglés.
 
 ## Reglas AST
 
