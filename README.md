@@ -41,6 +41,10 @@ patchproof rules
 patchproof init
 ```
 
+## Config
+
+`patchproof.config.json` can live in the current directory or any parent directory. Use it to set `failOn` and to enable or disable built-in rules.
+
 ## Built-In Rules
 
 | Rule | Purpose |

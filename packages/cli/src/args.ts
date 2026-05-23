@@ -4,8 +4,10 @@ export interface CliOptions {
   readonly command: 'audit' | 'init' | 'rules' | 'help' | 'version';
   readonly file?: string;
   readonly useGitDiff: boolean;
-  readonly output: OutputFormat;
-  readonly failOn: 'critical' | 'high' | 'medium' | 'low';
+  readonly output: OutputFormat | null;
+  readonly outputProvided: boolean;
+  readonly failOn: 'critical' | 'high' | 'medium' | 'low' | null;
+  readonly failOnProvided: boolean;
 }
 
 const validFormats = new Set<OutputFormat>(['text', 'json', 'markdown', 'sarif']);
@@ -36,8 +38,10 @@ export function parseArgs(argv: string[]): CliOptions {
 
   let file: string | undefined;
   let useGitDiff = false;
-  let output: OutputFormat = 'text';
-  let failOn: CliOptions['failOn'] = 'high';
+  let output: OutputFormat | null = null;
+  let outputProvided = false;
+  let failOn: CliOptions['failOn'] = null;
+  let failOnProvided = false;
 
   for (let index = 0; index < rest.length; index += 1) {
     const value = rest[index];
@@ -59,6 +63,7 @@ export function parseArgs(argv: string[]): CliOptions {
         throw new Error(`Invalid --format "${candidate}". Use text, json, markdown, or sarif.`);
       }
       output = candidate;
+      outputProvided = true;
       index += 1;
       continue;
     }
@@ -69,6 +74,7 @@ export function parseArgs(argv: string[]): CliOptions {
         throw new Error(`Invalid --fail-on "${candidate}". Use critical, high, medium, or low.`);
       }
       failOn = candidate;
+      failOnProvided = true;
       index += 1;
       continue;
     }
@@ -76,7 +82,7 @@ export function parseArgs(argv: string[]): CliOptions {
     throw new Error(`Unknown option "${value}".`);
   }
 
-  return { command: 'audit', file, useGitDiff, output, failOn };
+  return { command: 'audit', file, useGitDiff, output, outputProvided, failOn, failOnProvided };
 }
 
 function defaultOptions(command: CliOptions['command']): CliOptions {
@@ -84,7 +90,9 @@ function defaultOptions(command: CliOptions['command']): CliOptions {
     command,
     useGitDiff: false,
     output: 'text',
-    failOn: 'high'
+    outputProvided: false,
+    failOn: null,
+    failOnProvided: false
   };
 }
 

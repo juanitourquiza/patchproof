@@ -8,7 +8,21 @@ describe('parseArgs', () => {
       file: 'changes.diff',
       useGitDiff: false,
       output: 'sarif',
-      failOn: 'medium'
+      outputProvided: true,
+      failOn: 'medium',
+      failOnProvided: true
+    });
+  });
+
+  it('marks defaults when no overrides are provided', () => {
+    expect(parseArgs(['audit', '--diff'])).toEqual({
+      command: 'audit',
+      file: undefined,
+      useGitDiff: true,
+      output: null,
+      outputProvided: false,
+      failOn: null,
+      failOnProvided: false
     });
   });
 

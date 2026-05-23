@@ -2,6 +2,7 @@
 import { auditDiff, builtInRules } from '@patchproof/core';
 import { writeFileSync } from 'node:fs';
 import { parseArgs } from './args.js';
+import { loadConfig, resolveAuditRules, resolveFailOn } from './config.js';
 import { formatResult, formatRules } from './format.js';
 import { helpText, initConfigText } from './help.js';
 import { readDiffInput } from './input.js';
@@ -10,6 +11,7 @@ import { shouldFail } from './threshold.js';
 export async function main(argv = process.argv.slice(2)): Promise<number> {
   try {
     const options = parseArgs(argv);
+    const { config } = loadConfig();
 
     if (options.command === 'help') {
       console.log(helpText());
@@ -22,7 +24,7 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
     }
 
     if (options.command === 'rules') {
-      console.log(formatRules(builtInRules));
+      console.log(formatRules(resolveAuditRules(builtInRules, config)));
       return 0;
     }
 
@@ -38,10 +40,17 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       return 2;
     }
 
-    const result = auditDiff(diff);
-    console.log(formatResult(result, options.output));
+    const rules = resolveAuditRules(builtInRules, config);
+    const failOn = resolveFailOn(options.failOn, config);
+    const output = options.outputProvided ? options.output ?? 'text' : 'text';
+    const result = auditDiff(diff, {
+      rules,
+      minimumSeverity: failOn
+    });
 
-    return shouldFail(result, options.failOn) ? 1 : 0;
+    console.log(formatResult(result, output));
+
+    return shouldFail(result, failOn) ? 1 : 0;
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     return 2;

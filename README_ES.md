@@ -127,6 +127,10 @@ Ejemplo:
 node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --fail-on critical
 ```
 
+## Configuración
+
+`patchproof.config.json` puede vivir en el directorio actual o en cualquier directorio padre. Sirve para definir `failOn` y activar o desactivar reglas internas.
+
 ## Qué hace exactamente
 
 PatchProof analiza un unified diff, por ejemplo:
