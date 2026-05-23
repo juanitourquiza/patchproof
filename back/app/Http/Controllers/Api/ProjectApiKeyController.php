@@ -11,6 +11,28 @@ use Illuminate\Support\Facades\Config;
 
 class ProjectApiKeyController extends Controller
 {
+    public function index(Project $project, Request $request): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $keys = $project->apiKeys()
+            ->latest()
+            ->get()
+            ->map(fn (ProjectApiKey $apiKey) => [
+                'id' => $apiKey->id,
+                'name' => $apiKey->name,
+                'key_prefix' => $apiKey->key_prefix,
+                'last_used_at' => optional($apiKey->last_used_at)->toIso8601String(),
+                'revoked_at' => optional($apiKey->revoked_at)->toIso8601String(),
+                'created_at' => $apiKey->created_at?->toIso8601String(),
+            ])
+            ->values();
+
+        return response()->json([
+            'data' => $keys,
+        ]);
+    }
+
     public function store(Project $project, Request $request): JsonResponse
     {
         $this->authorizeAdmin($request);
@@ -34,6 +56,16 @@ class ProjectApiKeyController extends Controller
                 'token' => $plainText,
             ],
         ], 201);
+    }
+
+    public function destroy(Project $project, ProjectApiKey $apiKey, Request $request): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+        abort_unless($apiKey->project_id === $project->id, 404);
+
+        $apiKey->forceFill(['revoked_at' => now()])->save();
+
+        return response()->json([], 204);
     }
 
     private function authorizeAdmin(Request $request): void

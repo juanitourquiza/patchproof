@@ -12,7 +12,9 @@ Route::get('/projects', [ProjectController::class, 'index']);
 Route::post('/projects', [ProjectController::class, 'store']);
 Route::get('/projects/{project}', [ProjectController::class, 'show']);
 Route::get('/projects/{project}/scans', [ProjectController::class, 'scans']);
+Route::get('/projects/{project}/api-keys', [ProjectApiKeyController::class, 'index']);
 Route::post('/projects/{project}/api-keys', [ProjectApiKeyController::class, 'store']);
+Route::delete('/projects/{project}/api-keys/{apiKey}', [ProjectApiKeyController::class, 'destroy']);
 
 Route::get('/scans/{scan}', [ScanController::class, 'show']);
 Route::post('/scans', [ScanController::class, 'store']);

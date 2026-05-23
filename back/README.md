@@ -13,7 +13,9 @@ It is intentionally small at first:
 - `POST /api/projects`
 - `GET /api/projects/{project}`
 - `GET /api/projects/{project}/scans`
+- `GET /api/projects/{project}/api-keys`
 - `POST /api/projects/{project}/api-keys`
+- `DELETE /api/projects/{project}/api-keys/{apiKey}`
 - `GET /api/scans/{scan}`
 - `POST /api/scans`
 

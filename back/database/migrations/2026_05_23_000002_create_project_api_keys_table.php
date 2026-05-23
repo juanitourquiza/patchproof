@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('key_prefix', 24);
             $table->char('key_hash', 64)->unique();
             $table->timestamp('last_used_at')->nullable();
+            $table->timestamp('revoked_at')->nullable();
             $table->timestamps();
         });
     }

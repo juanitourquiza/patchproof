@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
-#[Fillable(['project_id', 'name', 'key_prefix', 'key_hash', 'last_used_at'])]
+#[Fillable(['project_id', 'name', 'key_prefix', 'key_hash', 'last_used_at', 'revoked_at'])]
 class ProjectApiKey extends Model
 {
     use HasFactory;
@@ -18,6 +18,7 @@ class ProjectApiKey extends Model
      */
     protected $casts = [
         'last_used_at' => 'datetime',
+        'revoked_at' => 'datetime',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -41,5 +42,10 @@ class ProjectApiKey extends Model
         ]);
 
         return [$apiKey, $plainText];
+    }
+
+    public function isActive(): bool
+    {
+        return $this->revoked_at === null;
     }
 }

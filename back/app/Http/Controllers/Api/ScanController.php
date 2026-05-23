@@ -66,6 +66,7 @@ class ScanController extends Controller
         $apiKey = ProjectApiKey::query()
             ->where('project_id', $project->id)
             ->where('key_hash', $keyHash)
+            ->whereNull('revoked_at')
             ->first();
 
         if ($apiKey === null) {

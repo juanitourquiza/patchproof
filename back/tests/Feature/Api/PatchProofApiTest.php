@@ -60,6 +60,61 @@ class PatchProofApiTest extends TestCase
         ]);
     }
 
+    public function test_project_api_keys_can_be_listed_by_admin(): void
+    {
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'GitHub Action',
+            'key_prefix' => 'patchproof-a1',
+            'key_hash' => hash('sha256', 'first-key'),
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'Local CLI',
+            'key_prefix' => 'patchproof-b2',
+            'key_hash' => hash('sha256', 'second-key'),
+        ]);
+
+        $this->withHeader('X-PatchProof-Admin-Key', 'admin-secret')
+            ->getJson("/api/projects/{$project->id}/api-keys")
+            ->assertOk()
+            ->assertJsonCount(2, 'data')
+            ->assertJsonPath('data.0.name', 'GitHub Action')
+            ->assertJsonPath('data.1.name', 'Local CLI');
+    }
+
+    public function test_project_api_key_can_be_revoked_by_admin(): void
+    {
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        $apiKey = ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'GitHub Action',
+            'key_prefix' => 'patchproof-a1',
+            'key_hash' => hash('sha256', 'first-key'),
+        ]);
+
+        $this->withHeader('X-PatchProof-Admin-Key', 'admin-secret')
+            ->deleteJson("/api/projects/{$project->id}/api-keys/{$apiKey->id}")
+            ->assertNoContent();
+
+        $this->assertDatabaseHas('project_api_keys', [
+            'id' => $apiKey->id,
+        ]);
+        $this->assertNotNull(ProjectApiKey::find($apiKey->id)?->revoked_at);
+    }
+
     public function test_scan_requires_a_valid_project_api_key(): void
     {
         $project = Project::create([
@@ -144,5 +199,30 @@ class PatchProofApiTest extends TestCase
                 'project_id' => $project->id,
             ])
             ->assertUnauthorized();
+    }
+
+    public function test_revoked_key_cannot_be_used_to_submit_scans(): void
+    {
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        $apiKey = ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'CLI',
+            'key_prefix' => 'patchproof',
+            'key_hash' => hash('sha256', 'plain-project-key'),
+            'revoked_at' => now(),
+        ]);
+
+        $this->withHeader('X-PatchProof-Key', 'plain-project-key')
+            ->postJson('/api/scans', [
+                'project_id' => $project->id,
+            ])
+            ->assertUnauthorized();
+
+        $this->assertNotNull(ProjectApiKey::find($apiKey->id)?->revoked_at);
     }
 }
