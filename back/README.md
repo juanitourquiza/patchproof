@@ -1,24 +1,40 @@
 # PatchProof Back
 
-Laravel API placeholder for the hosted PatchProof product.
+Laravel API for hosted PatchProof data.
 
-Do not build this before the CLI has real usage. The backend should start when there is a need for hosted scan history, teams, API keys, billing, or private rule policies.
+## Purpose
 
-## Planned Responsibilities
+This backend stores projects and scan reports produced by the local CLI or the GitHub Action.
 
-- API key authentication for CLI uploads.
-- Projects, scans, findings, and rule policy storage.
-- Team and organization boundaries.
-- Billing-ready plan checks.
-- Privacy-first storage: findings by default, raw code only with explicit opt-in.
+It is intentionally small at first:
 
-## Initial API Shape
+- `GET /api/health`
+- `GET /api/projects`
+- `POST /api/projects`
+- `GET /api/projects/{project}`
+- `GET /api/projects/{project}/scans`
+- `GET /api/scans/{scan}`
+- `POST /api/scans`
 
-```http
-POST /api/scans
-GET  /api/scans/{id}
-GET  /api/projects/{id}/scans
-GET  /api/projects/{id}/findings
+## Local setup
+
+```bash
+cd back
+composer install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+php artisan serve
 ```
 
-Responses should use the same finding contract produced by `@patchproof/core`.
+## Data model
+
+- `projects` stores a team or repository scope.
+- `scans` stores normalized findings and metadata.
+- The API avoids storing raw source code by default.
+
+## Defaults
+
+- English is the default report language.
+- Spanish is supported when the CLI sends `language=es` or `--lang es`.
+- SQLite is the default local database.
