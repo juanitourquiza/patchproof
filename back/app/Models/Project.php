@@ -24,4 +24,9 @@ class Project extends Model
     {
         return $this->hasMany(Scan::class);
     }
+
+    public function apiKeys(): HasMany
+    {
+        return $this->hasMany(ProjectApiKey::class);
+    }
 }

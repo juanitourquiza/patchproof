@@ -5,6 +5,7 @@ PatchProof is a local-first security review tool for AI-generated code diffs.
 Spanish README: [README_ES.md](README_ES.md).
 
 The first release focuses on a fast npm CLI that audits `git diff` output before code reaches a pull request. The hosted Laravel + Angular product comes after the CLI proves value in real developer workflows.
+The Laravel backend now stores projects, scans, and project API keys for hosted ingestion.
 
 ## Project Layout
 
@@ -12,7 +13,7 @@ The first release focuses on a fast npm CLI that audits `git diff` output before
 patchproof/
   packages/core/  TypeScript audit engine and built-in rules
   packages/cli/   `npx patchproof` CLI
-  back/           Laravel API plan for hosted reports, teams, API keys, billing
+  back/           Laravel API for hosted reports, teams, and API keys
   front/          Angular dashboard plan for scan history and reports
 ```
 
@@ -91,4 +92,5 @@ npm run build
 2. Add custom rules and config loading from `patchproof.config.json`.
 3. Ship the GitHub Action wrapper with SARIF upload support.
 4. Implement `back/` Laravel hosted reporting.
-5. Implement `front/` Angular dashboard.
+5. Add project API key management and authenticated scan ingestion.
+6. Implement `front/` Angular dashboard.

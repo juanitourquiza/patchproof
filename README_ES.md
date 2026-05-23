@@ -8,6 +8,8 @@ La idea no es reemplazar SonarQube, Semgrep o una auditoría humana. La idea es 
 
 Este es un **MVP funcional de CLI**.
 
+El backend Laravel de `back/` ya existe y guarda proyectos, scans y llaves API de proyecto para la ingesta hospedada.
+
 Ya hace:
 
 - Lee un diff desde `git diff`, archivo `.diff` o stdin.
@@ -30,8 +32,8 @@ Todavía falta:
 - Reglas AST más precisas para TypeScript, Angular, Node y Laravel/PHP.
 - Cargar configuración real desde `patchproof.config.json`.
 - GitHub Action publicable.
-- Backend Laravel real en `back/`.
 - Dashboard Angular real en `front/`.
+- Gestión de llaves API de proyecto y subida autenticada de scans.
 - Publicar el paquete en npm para usar `npx patchproof`.
 
 ## Estructura
@@ -40,7 +42,7 @@ Todavía falta:
 patchproof/
   packages/core/  Motor TypeScript de auditoría y reglas internas
   packages/cli/   CLI patchproof
-  back/           Futuro backend Laravel para reportes, equipos y monetización
+  back/           Backend Laravel para reportes, equipos y llaves API
   front/          Futuro dashboard Angular
   docs/           Arquitectura, monetización y fixtures
 ```
