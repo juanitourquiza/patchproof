@@ -1,0 +1,25 @@
+{
+  "name": "patchproof-monorepo",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Local-first security review for AI-generated diffs.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @patchproof/core && npm run build -w patchproof",
+    "test": "vitest run",
+    "typecheck": "tsc -b packages/core packages/cli",
+    "audit:sample": "node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "engines": {
+    "node": ">=20.11"
+  }
+}

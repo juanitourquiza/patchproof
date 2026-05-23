@@ -1,0 +1,25 @@
+{
+  "name": "patchproof",
+  "version": "0.1.0",
+  "description": "CLI for auditing AI-generated code diffs before merge.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "patchproof": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run src"
+  },
+  "dependencies": {
+    "@patchproof/core": "0.1.0"
+  }
+}

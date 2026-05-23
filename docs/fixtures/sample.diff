@@ -1,0 +1,10 @@
+diff --git a/src/server.ts b/src/server.ts
+--- a/src/server.ts
++++ b/src/server.ts
+@@ -1,2 +1,7 @@
+ import express from "express";
++const apiKey = "sk-proj-abcdefghijklmnopqrstuvwxyz";
++app.get("/search", (req, res) => db.query(`SELECT * FROM users WHERE name = ${req.query.name}`));
++document.body.innerHTML = req.query.message;
++eval(req.body.script);
++const cors = { origin: "*" };
