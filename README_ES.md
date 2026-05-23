@@ -172,49 +172,6 @@ Estado actual verificado:
 
 Npm sí reporta vulnerabilidades moderadas en dependencias de desarrollo de tooling. No afectan el runtime publicado del CLI, pero conviene revisarlas antes de release público.
 
-## Camino recomendado desde aquí
-
-1. Convertir este MVP en repo GitHub público.
-2. Crear issues pequeños:
-   - config real;
-   - reglas Laravel;
-   - reglas Angular;
-   - GitHub Action;
-   - publicación npm.
-3. Publicar una versión `0.1.0` en npm.
-4. Crear contenido técnico:
-   - demo con Claude Code/Cursor;
-   - post “cómo auditar código generado por IA”;
-   - comparación práctica con Semgrep/SonarQube.
-5. Cuando haya uso real, construir `back/` Laravel y `front/` Angular para reportes históricos y monetización.
-
-## Modelo open source + monetización
-
-Gratis MIT:
-
-- CLI local;
-- reglas base;
-- SARIF;
-- GitHub Action.
-
-Pago/SaaS:
-
-- historial de scans;
-- equipos;
-- dashboards;
-- alertas;
-- políticas por proyecto;
-- reglas privadas;
-- reportes ejecutivos.
-
-Enterprise:
-
-- self-hosted;
-- SSO/RBAC;
-- audit logs;
-- reglas custom;
-- soporte.
-
 ## Licencia
 
 MIT.
