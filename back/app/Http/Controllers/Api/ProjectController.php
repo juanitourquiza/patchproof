@@ -47,6 +47,71 @@ class ProjectController extends Controller
         ]);
     }
 
+    public function summary(Project $project, Request $request): JsonResponse
+    {
+        $scans = $project->scans()
+            ->select(['id', 'project_id', 'source', 'language', 'status', 'summary', 'created_at', 'updated_at'])
+            ->latest()
+            ->get();
+
+        $severityTotals = [
+            'critical' => 0,
+            'high' => 0,
+            'medium' => 0,
+            'low' => 0,
+        ];
+
+        foreach ($scans as $scan) {
+            foreach ($severityTotals as $severity => $total) {
+                $severityTotals[$severity] += (int) data_get($scan->summary, $severity, 0);
+            }
+        }
+
+        $breakdown = static fn (string $field) => $scans
+            ->groupBy($field)
+            ->map(fn ($items, $value) => [
+                $field => $value,
+                'count' => $items->count(),
+            ])
+            ->values()
+            ->all();
+
+        $recentScans = $project->scans()
+            ->with('project')
+            ->latest()
+            ->limit(5)
+            ->get();
+
+        return response()->json([
+            'data' => [
+                'project' => [
+                    'id' => $project->id,
+                    'name' => $project->name,
+                    'slug' => $project->slug,
+                    'description' => $project->description,
+                ],
+                'totals' => [
+                    'scans' => $scans->count(),
+                    'statuses' => $scans->groupBy('status')->map->count()->all(),
+                ],
+                'breakdowns' => [
+                    'languages' => $breakdown('language'),
+                    'sources' => $breakdown('source'),
+                    'severities' => array_map(
+                        fn (string $severity, int $count) => [
+                            'severity' => $severity,
+                            'count' => $count,
+                        ],
+                        array_keys($severityTotals),
+                        array_values($severityTotals)
+                    ),
+                ],
+                'latest_scan_at' => $scans->first()?->created_at?->toIso8601String(),
+                'recent_scans' => ScanResource::collection($recentScans)->toArray($request),
+            ],
+        ]);
+    }
+
     public function scans(Project $project, Request $request): JsonResponse
     {
         $validated = $request->validate([

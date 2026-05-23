@@ -293,4 +293,63 @@ class PatchProofApiTest extends TestCase
             ->assertJsonPath('data.0.language', 'es')
             ->assertJsonPath('data.0.project.id', $projectA->id);
     }
+
+    public function test_project_summary_includes_rollups_and_recent_scans(): void
+    {
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'CLI',
+            'key_prefix' => 'patchproof',
+            'key_hash' => hash('sha256', 'project-key'),
+        ]);
+
+        $this->withHeader('X-PatchProof-Key', 'project-key')
+            ->postJson('/api/scans', [
+                'project_id' => $project->id,
+                'status' => 'completed',
+                'language' => 'en',
+                'source' => 'cli',
+                'summary' => [
+                    'critical' => 1,
+                    'high' => 2,
+                    'medium' => 0,
+                    'low' => 0,
+                ],
+            ])
+            ->assertCreated();
+
+        $this->withHeader('X-PatchProof-Key', 'project-key')
+            ->postJson('/api/scans', [
+                'project_id' => $project->id,
+                'status' => 'failed',
+                'language' => 'es',
+                'source' => 'github-action',
+                'summary' => [
+                    'critical' => 0,
+                    'high' => 0,
+                    'medium' => 3,
+                    'low' => 1,
+                ],
+            ])
+            ->assertCreated();
+
+        $this->getJson("/api/projects/{$project->id}/summary")
+            ->assertOk()
+            ->assertJsonPath('data.project.id', $project->id)
+            ->assertJsonPath('data.totals.scans', 2)
+            ->assertJsonPath('data.totals.statuses.completed', 1)
+            ->assertJsonPath('data.totals.statuses.failed', 1)
+            ->assertJsonPath('data.breakdowns.languages.0.language', 'en')
+            ->assertJsonPath('data.breakdowns.languages.0.count', 1)
+            ->assertJsonPath('data.breakdowns.sources.1.source', 'github-action')
+            ->assertJsonPath('data.breakdowns.severities.0.severity', 'critical')
+            ->assertJsonPath('data.breakdowns.severities.0.count', 1)
+            ->assertJsonCount(2, 'data.recent_scans');
+    }
 }

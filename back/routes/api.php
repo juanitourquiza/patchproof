@@ -11,6 +11,7 @@ Route::get('/health', HealthController::class);
 Route::get('/projects', [ProjectController::class, 'index']);
 Route::post('/projects', [ProjectController::class, 'store']);
 Route::get('/projects/{project}', [ProjectController::class, 'show']);
+Route::get('/projects/{project}/summary', [ProjectController::class, 'summary']);
 Route::get('/projects/{project}/scans', [ProjectController::class, 'scans']);
 Route::get('/projects/{project}/api-keys', [ProjectApiKeyController::class, 'index']);
 Route::post('/projects/{project}/api-keys', [ProjectApiKeyController::class, 'store']);

@@ -12,6 +12,7 @@ It is intentionally small at first:
 - `GET /api/projects`
 - `POST /api/projects`
 - `GET /api/projects/{project}`
+- `GET /api/projects/{project}/summary`
 - `GET /api/projects/{project}/scans`
 - `GET /api/projects/{project}/api-keys`
 - `POST /api/projects/{project}/api-keys`
@@ -38,6 +39,10 @@ To upload scans, send the issued key in `Authorization: Bearer <token>` or
 
 `GET /api/scans` and `GET /api/projects/{project}/scans` accept filters such as
 `status`, `language`, `source`, `from`, `to`, and `per_page`.
+
+`GET /api/projects/{project}/summary` returns totals, status breakdowns,
+language/source breakdowns, severity rollups, the latest scan timestamp, and
+the five most recent scans for the dashboard.
 
 ## Data model
 
