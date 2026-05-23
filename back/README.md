@@ -16,6 +16,7 @@ It is intentionally small at first:
 - `GET /api/projects/{project}/api-keys`
 - `POST /api/projects/{project}/api-keys`
 - `DELETE /api/projects/{project}/api-keys/{apiKey}`
+- `GET /api/scans`
 - `GET /api/scans/{scan}`
 - `POST /api/scans`
 
@@ -34,6 +35,9 @@ To create project API keys in development, set `PATCHPROOF_ADMIN_KEY` in `.env`
 and send it as `X-PatchProof-Admin-Key` to `POST /api/projects/{project}/api-keys`.
 To upload scans, send the issued key in `Authorization: Bearer <token>` or
 `X-PatchProof-Key: <token>`.
+
+`GET /api/scans` and `GET /api/projects/{project}/scans` accept filters such as
+`status`, `language`, `source`, `from`, `to`, and `per_page`.
 
 ## Data model
 

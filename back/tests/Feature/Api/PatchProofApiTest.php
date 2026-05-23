@@ -225,4 +225,72 @@ class PatchProofApiTest extends TestCase
 
         $this->assertNotNull(ProjectApiKey::find($apiKey->id)?->revoked_at);
     }
+
+    public function test_scan_history_can_be_filtered_globally_and_by_project(): void
+    {
+        $projectA = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        $projectB = Project::create([
+            'name' => 'PatchProof UI',
+            'slug' => 'patchproof-ui',
+            'description' => 'Angular dashboard',
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $projectA->id,
+            'name' => 'CLI',
+            'key_prefix' => 'patchproof-a1',
+            'key_hash' => hash('sha256', 'project-a-key'),
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $projectB->id,
+            'name' => 'UI',
+            'key_prefix' => 'patchproof-b2',
+            'key_hash' => hash('sha256', 'project-b-key'),
+        ]);
+
+        $this->withHeader('X-PatchProof-Key', 'project-a-key')
+            ->postJson('/api/scans', [
+                'project_id' => $projectA->id,
+                'status' => 'completed',
+                'language' => 'es',
+                'source' => 'cli',
+            ])
+            ->assertCreated();
+
+        $this->withHeader('X-PatchProof-Key', 'project-b-key')
+            ->postJson('/api/scans', [
+                'project_id' => $projectB->id,
+                'status' => 'failed',
+                'language' => 'en',
+                'source' => 'github-action',
+            ])
+            ->assertCreated();
+
+        $this->withHeader('X-PatchProof-Key', 'project-a-key')
+            ->postJson('/api/scans', [
+                'project_id' => $projectA->id,
+                'status' => 'failed',
+                'language' => 'en',
+                'source' => 'cli',
+            ])
+            ->assertCreated();
+
+        $this->getJson('/api/scans?status=completed&project_id='.$projectA->id)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.project.id', $projectA->id)
+            ->assertJsonPath('data.0.status', 'completed');
+
+        $this->getJson("/api/projects/{$projectA->id}/scans?language=es")
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.language', 'es')
+            ->assertJsonPath('data.0.project.id', $projectA->id);
+    }
 }

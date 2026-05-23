@@ -16,5 +16,6 @@ Route::get('/projects/{project}/api-keys', [ProjectApiKeyController::class, 'ind
 Route::post('/projects/{project}/api-keys', [ProjectApiKeyController::class, 'store']);
 Route::delete('/projects/{project}/api-keys/{apiKey}', [ProjectApiKeyController::class, 'destroy']);
 
+Route::get('/scans', [ScanController::class, 'index']);
 Route::get('/scans/{scan}', [ScanController::class, 'show']);
 Route::post('/scans', [ScanController::class, 'store']);

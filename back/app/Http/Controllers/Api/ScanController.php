@@ -6,15 +6,43 @@ use App\Http\Controllers\Controller;
 use App\Models\Project;
 use App\Models\ProjectApiKey;
 use App\Models\Scan;
+use App\Http\Resources\ScanResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ScanController extends Controller
 {
+    public function index(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+            'status' => ['nullable', 'in:queued,completed,failed'],
+            'language' => ['nullable', 'in:en,es'],
+            'source' => ['nullable', 'string', 'max:50'],
+            'from' => ['nullable', 'date'],
+            'to' => ['nullable', 'date'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+
+        $scans = Scan::query()
+            ->with('project')
+            ->when($validated['project_id'] ?? null, fn ($query, $projectId) => $query->where('project_id', $projectId))
+            ->when($validated['status'] ?? null, fn ($query, $status) => $query->where('status', $status))
+            ->when($validated['language'] ?? null, fn ($query, $language) => $query->where('language', $language))
+            ->when($validated['source'] ?? null, fn ($query, $source) => $query->where('source', $source))
+            ->when($validated['from'] ?? null, fn ($query, $from) => $query->whereDate('created_at', '>=', $from))
+            ->when($validated['to'] ?? null, fn ($query, $to) => $query->whereDate('created_at', '<=', $to))
+            ->latest()
+            ->paginate($validated['per_page'] ?? 15)
+            ->withQueryString();
+
+        return ScanResource::collection($scans)->response();
+    }
+
     public function show(Scan $scan): JsonResponse
     {
         return response()->json([
-            'data' => $scan->load('project'),
+            'data' => new ScanResource($scan->load('project')),
         ]);
     }
 
@@ -49,7 +77,7 @@ class ScanController extends Controller
         ]);
 
         return response()->json([
-            'data' => $scan->load('project'),
+            'data' => new ScanResource($scan->load('project')),
         ], 201);
     }
 
