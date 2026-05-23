@@ -1,4 +1,5 @@
 import { createFinding } from '../finding.js';
+import { hasDangerousExecutionPattern } from '../ast.js';
 import type { AuditRule, Finding } from '../types.js';
 
 const dangerousExecutionPattern = /\b(?:eval|Function|execSync|spawnSync|child_process\.exec|shell_exec|passthru|system)\s*\(/;
@@ -9,7 +10,7 @@ export const dangerousExecutionRule: AuditRule = {
   tags: ['security', 'command-injection', 'owasp-a03'],
   run(context): Finding[] {
     return context.addedLines
-      .filter((line) => dangerousExecutionPattern.test(line.content))
+      .filter((line) => hasDangerousExecutionPattern(line) || dangerousExecutionPattern.test(line.content))
       .map((line) =>
         createFinding({
           ruleId: dangerousExecutionRule.id,

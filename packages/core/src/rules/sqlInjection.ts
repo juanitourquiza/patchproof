@@ -1,4 +1,5 @@
 import { createFinding } from '../finding.js';
+import { hasSqlInjectionPattern } from '../ast.js';
 import type { AuditRule, Finding } from '../types.js';
 
 const sqlCallPattern = /\b(?:query|raw|execute|exec|statement|select)\s*\(/i;
@@ -10,7 +11,7 @@ export const sqlInjectionRule: AuditRule = {
   tags: ['security', 'sql-injection', 'owasp-a03'],
   run(context): Finding[] {
     return context.addedLines
-      .filter((line) => sqlCallPattern.test(line.content) && interpolationPattern.test(line.content))
+      .filter((line) => hasSqlInjectionPattern(line) || (sqlCallPattern.test(line.content) && interpolationPattern.test(line.content)))
       .map((line) =>
         createFinding({
           ruleId: sqlInjectionRule.id,

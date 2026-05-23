@@ -45,6 +45,10 @@ patchproof init
 
 `patchproof.config.json` can live in the current directory or any parent directory. Use it to set `failOn` and to enable or disable built-in rules.
 
+## AST Rules
+
+AST rules parse the code syntax instead of only matching text. That lets PatchProof understand calls like `db["query"](...)` or `globalThis["eval"](...)`, which a plain regex can miss or misread. In practice, AST rules mean fewer false negatives and less noise.
+
 ## Built-In Rules
 
 | Rule | Purpose |

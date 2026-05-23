@@ -1,4 +1,5 @@
 import { createFinding } from '../finding.js';
+import { hasUnsafeHtmlPattern } from '../ast.js';
 import type { AuditRule, Finding } from '../types.js';
 
 const unsafeHtmlPattern = /\b(?:innerHTML|outerHTML|insertAdjacentHTML|bypassSecurityTrustHtml|dangerouslySetInnerHTML)\b/;
@@ -9,7 +10,7 @@ export const xssRule: AuditRule = {
   tags: ['security', 'xss', 'owasp-a03'],
   run(context): Finding[] {
     return context.addedLines
-      .filter((line) => unsafeHtmlPattern.test(line.content))
+      .filter((line) => hasUnsafeHtmlPattern(line) || unsafeHtmlPattern.test(line.content))
       .map((line) =>
         createFinding({
           ruleId: xssRule.id,

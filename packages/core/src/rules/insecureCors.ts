@@ -1,4 +1,5 @@
 import { createFinding } from '../finding.js';
+import { hasWildcardCorsPattern } from '../ast.js';
 import type { AuditRule, Finding } from '../types.js';
 
 const corsWildcardPattern = /\b(?:origin|allowed_origins|Access-Control-Allow-Origin)\b\s*[:=]\s*['"]\*['"]/i;
@@ -9,7 +10,7 @@ export const insecureCorsRule: AuditRule = {
   tags: ['security', 'cors', 'owasp-a05'],
   run(context): Finding[] {
     return context.addedLines
-      .filter((line) => corsWildcardPattern.test(line.content))
+      .filter((line) => hasWildcardCorsPattern(line) || corsWildcardPattern.test(line.content))
       .map((line) =>
         createFinding({
           ruleId: insecureCorsRule.id,

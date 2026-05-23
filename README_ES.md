@@ -131,6 +131,10 @@ node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --fail-on
 
 `patchproof.config.json` puede vivir en el directorio actual o en cualquier directorio padre. Sirve para definir `failOn` y activar o desactivar reglas internas.
 
+## Reglas AST
+
+Las reglas AST analizan la sintaxis del código, no solo el texto. Eso permite entender llamadas como `db["query"](...)` o `globalThis["eval"](...)`, que una regex simple puede no detectar o interpretar mal. En la práctica hay menos falsos negativos y menos ruido.
+
 ## Qué hace exactamente
 
 PatchProof analiza un unified diff, por ejemplo:

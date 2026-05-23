@@ -42,4 +42,19 @@ describe('auditDiff', () => {
     expect(result.findings).toEqual([]);
     expect(result.summary.total).toBe(0);
   });
+
+  it('detects AST-based execution and SQL patterns that regex-only checks miss', () => {
+    const diff = [
+      'diff --git a/src/app.ts b/src/app.ts',
+      '--- a/src/app.ts',
+      '+++ b/src/app.ts',
+      '@@ -1 +1,3 @@',
+      '+globalThis["eval"](req.body.script);',
+      '+db["query"](`SELECT * FROM users WHERE id = ${userId}`);'
+    ].join('\n');
+
+    const result = auditDiff(diff);
+
+    expect(result.findings.map((finding) => finding.ruleId)).toEqual(['PP004', 'PP002']);
+  });
 });
