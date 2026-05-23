@@ -132,6 +132,19 @@ node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --fail-on
 `patchproof.config.json` puede vivir en el directorio actual o en cualquier directorio padre. Sirve para definir `failOn` y activar o desactivar reglas internas.
 También soporta `language: "en"` o `language: "es"` para el idioma de los reportes. El idioma por defecto es inglés.
 
+## GitHub Action
+
+Usa el action de este repositorio cuando el paquete esté publicado en npm, o en modo `local` desde una copia del repo.
+
+```yaml
+- uses: juanitourquiza/patchproof@main
+  with:
+    mode: npm
+    format: sarif
+    lang: en
+    fail-on: high
+```
+
 ## Reglas AST
 
 Las reglas AST analizan la sintaxis del código, no solo el texto. Eso permite entender llamadas como `db["query"](...)` o `globalThis["eval"](...)`, que una regex simple puede no detectar o interpretar mal. En la práctica hay menos falsos negativos y menos ruido.

@@ -46,6 +46,19 @@ patchproof init
 `patchproof.config.json` can live in the current directory or any parent directory. Use it to set `failOn` and to enable or disable built-in rules.
 It also supports `language: "en"` or `language: "es"` for report output. English is the default.
 
+## GitHub Action
+
+Use the action from this repository once the package is available on npm, or in `local` mode from a checked-out copy.
+
+```yaml
+- uses: juanitourquiza/patchproof@main
+  with:
+    mode: npm
+    format: sarif
+    lang: en
+    fail-on: high
+```
+
 ## AST Rules
 
 AST rules parse the code syntax instead of only matching text. That lets PatchProof understand calls like `db["query"](...)` or `globalThis["eval"](...)`, which a plain regex can miss or misread. In practice, AST rules mean fewer false negatives and less noise.
