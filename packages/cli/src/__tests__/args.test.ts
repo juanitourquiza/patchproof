@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { parseArgs } from '../args.js';
 
 describe('parseArgs', () => {
-  it('parses audit options', () => {
-    expect(parseArgs(['audit', '--file', 'changes.diff', '--format', 'sarif', '--fail-on', 'medium', '--lang', 'es'])).toEqual({
-      command: 'audit',
+  it('parses paudit options', () => {
+    expect(parseArgs(['paudit', '--file', 'changes.diff', '--format', 'sarif', '--fail-on', 'medium', '--lang', 'es'])).toEqual({
+      command: 'paudit',
       file: 'changes.diff',
       useGitDiff: false,
       output: 'sarif',
@@ -17,8 +17,8 @@ describe('parseArgs', () => {
   });
 
   it('marks defaults when no overrides are provided', () => {
-    expect(parseArgs(['audit', '--diff'])).toEqual({
-      command: 'audit',
+    expect(parseArgs(['paudit', '--diff'])).toEqual({
+      command: 'paudit',
       file: undefined,
       useGitDiff: true,
       output: null,
@@ -28,6 +28,10 @@ describe('parseArgs', () => {
       lang: null,
       langProvided: false
     });
+  });
+
+  it('keeps audit as a compatibility alias', () => {
+    expect(parseArgs(['audit', '--diff']).command).toBe('audit');
   });
 
   it('rejects invalid formats', () => {

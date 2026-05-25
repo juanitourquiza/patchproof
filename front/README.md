@@ -1,17 +1,33 @@
 # PatchProof Front
 
-Angular dashboard placeholder for hosted reports.
+Angular dashboard for hosted PatchProof scans, project summaries, and API keys.
 
-Build this after the CLI and Laravel upload API are stable. The dashboard should be operational and dense, not a marketing landing page.
+## What it shows
 
-## Planned Views
+- Project list with scan counts.
+- Project summary with severity, language, and source rollups.
+- Recent scan cards with project name, findings, and severity summary.
+- Project API keys with revocation controls.
+- Local admin key storage in the browser to unlock API key management.
 
-- Projects list with latest scan status.
-- Scan report with severity filters and finding details.
-- Trend dashboard for critical/high finding counts over time.
-- Rule policy settings per project.
-- Team/API key management once the backend supports it.
+## Local development
 
-## Design Direction
+```bash
+cd front
+npm install
+npm start
+```
 
-Use a restrained security tooling interface: compact tables, clear severity badges, command snippets, and report details optimized for repeated engineering use.
+The front runs on `http://localhost:4202` by default.
+In development it uses `src/environments/environment.development.ts`, which points to `http://127.0.0.1:8001/api`.
+
+If your backend runs on another port, edit `src/environments/environment.development.ts`
+and update `back/config/cors.php` or `CORS_ALLOWED_ORIGINS` in `back/.env`.
+
+Start the Laravel backend first, then run the front.
+
+## Notes
+
+- English is the default UI language.
+- The front consumes the Laravel JSON contract directly.
+- This is an operational dashboard, not a landing page.

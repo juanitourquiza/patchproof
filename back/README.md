@@ -32,6 +32,10 @@ php artisan migrate
 php artisan serve
 ```
 
+If port `8000` is already in use, Laravel will usually fall back to `8001`.
+If you change the front port or backend port, update `CORS_ALLOWED_ORIGINS`
+in `back/.env` so the browser can reach the API.
+
 To create project API keys in development, set `PATCHPROOF_ADMIN_KEY` in `.env`
 and send it as `X-PatchProof-Admin-Key` to `POST /api/projects/{project}/api-keys`.
 To upload scans, send the issued key in `Authorization: Bearer <token>` or
@@ -55,4 +59,5 @@ the five most recent scans for the dashboard.
 
 - English is the default report language.
 - Spanish is supported when the CLI sends `language=es` or `--lang es`.
-- SQLite is the default local database.
+- SQLite is convenient for local demos and tests.
+- MySQL is the recommended production database for hosted PatchProof.

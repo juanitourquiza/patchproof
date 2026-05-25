@@ -1,0 +1,415 @@
+<main class="shell">
+  <section class="topbar">
+    <div>
+      <p class="eyebrow">PatchProof</p>
+      <h1>Hosted scan review</h1>
+      <p class="lede">
+        Projects, summaries, scan history, and project API keys from the Laravel backend.
+      </p>
+    </div>
+
+    <div class="topbar-actions">
+      <span class="health-pill" [ngClass]="health()?.ok ? 'ok' : 'warn'">
+        {{ health()?.ok ? 'Connected' : 'Offline' }}
+      </span>
+      <button type="button" class="button button-ghost" (click)="refresh()">
+        Refresh
+      </button>
+    </div>
+  </section>
+
+  @if (error()) {
+    <section class="message message-error" role="alert">
+      {{ error() }}
+    </section>
+  }
+
+  @if (actionMessage()) {
+    <section class="message message-success" role="status">
+      {{ actionMessage() }}
+    </section>
+  }
+
+  <section class="layout">
+    <aside class="panel sidebar">
+      <div class="panel-head">
+        <div>
+          <h2>Projects</h2>
+          <p>{{ projects().length }} tracked projects</p>
+        </div>
+        @if (health()) {
+          <span class="meta">v{{ health()?.version }}</span>
+        }
+      </div>
+
+      <section class="mini-panel auth-panel">
+        <div class="mini-panel__title">Admin access</div>
+        @if (canManageKeys()) {
+          <p class="auth-copy">
+            Stored locally in this browser. Needed to list and revoke project API keys.
+          </p>
+          <div class="auth-actions">
+            <span class="chip ok">Enabled</span>
+            <button type="button" class="button button-ghost" (click)="clearAdminKey()">
+              Remove key
+            </button>
+          </div>
+        } @else {
+          <p class="auth-copy">
+            Enter the admin key to unlock API key management for the selected project.
+          </p>
+          <label class="field">
+            <span>Admin key</span>
+            <input
+              type="password"
+              autocomplete="off"
+              spellcheck="false"
+              [value]="adminKeyDraft()"
+              (input)="adminKeyDraft.set($any($event.target).value)"
+              placeholder="X-PatchProof-Admin-Key"
+            />
+          </label>
+          <div class="auth-actions">
+            <button
+              type="button"
+              class="button"
+              [disabled]="!adminKeyDraft().trim()"
+              (click)="saveAdminKey()"
+            >
+              Save locally
+            </button>
+          </div>
+        }
+      </section>
+
+      @if (loading()) {
+        <div class="state state-loading">Loading projects...</div>
+      } @else if (projects().length === 0) {
+        <div class="state">
+          <strong>No projects yet</strong>
+          <p>Create a project from the API to start tracking scans.</p>
+        </div>
+      } @else {
+        <div class="project-list" role="list">
+          @for (project of projects(); track project.id) {
+            <button
+              type="button"
+              class="project-card"
+              [class.active]="selectedProjectId() === project.id"
+              (click)="selectProject(project.id)"
+            >
+              <div class="project-card__header">
+                <div>
+                  <span class="project-card__name">{{ project.name }}</span>
+                  <span class="project-card__slug">{{ project.slug }}</span>
+                </div>
+                <span class="project-card__count">{{ project.scans_count ?? 0 }}</span>
+              </div>
+              <p class="project-card__desc">{{ project.description || 'No description' }}</p>
+            </button>
+          }
+        </div>
+      }
+    </aside>
+
+    <section class="main-column">
+      @if (loadingProject()) {
+        <section class="panel">
+          <div class="state state-loading">Loading project details...</div>
+        </section>
+      } @else if (selectedProject(); as project) {
+        @if (projectSummary(); as summary) {
+          <section class="panel summary-panel">
+            <div class="panel-head">
+              <div>
+                <h2>{{ project.name }}</h2>
+                <p>{{ project.slug }} · {{ project.description || 'No description' }}</p>
+              </div>
+              <span class="meta">
+                Last refresh {{ refreshedAt() ? (refreshedAt() | date: 'mediumTime') : 'now' }}
+              </span>
+            </div>
+
+            <div class="metrics">
+              <article class="metric">
+                <span class="metric__label">Scans</span>
+                <strong class="metric__value">{{ summary.totals.scans }}</strong>
+              </article>
+              <article class="metric">
+                <span class="metric__label">Completed</span>
+                <strong class="metric__value">{{ statusCount(summary, 'completed') }}</strong>
+              </article>
+              <article class="metric">
+                <span class="metric__label">Failed</span>
+                <strong class="metric__value">{{ statusCount(summary, 'failed') }}</strong>
+              </article>
+              <article class="metric">
+                <span class="metric__label">Latest scan</span>
+                <strong class="metric__value">
+                  {{ summary.latest_scan_at ? (summary.latest_scan_at | date: 'medium') : 'n/a' }}
+                </strong>
+              </article>
+            </div>
+
+            <div class="breakdown-grid">
+              <div class="mini-panel">
+                <div class="mini-panel__title">Severity rollup</div>
+                <div class="chips">
+                  @for (item of summary.breakdowns.severities; track item.severity) {
+                    <span class="chip" [ngClass]="severityTone(item.severity || 'info')">
+                      {{ item.severity }} · {{ item.count }}
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="mini-panel">
+                <div class="mini-panel__title">Languages</div>
+                <div class="chips">
+                  @for (item of summary.breakdowns.languages; track item.language) {
+                    <span class="chip">
+                      {{ item.language }} · {{ item.count }}
+                    </span>
+                  }
+                </div>
+              </div>
+              <div class="mini-panel">
+                <div class="mini-panel__title">Sources</div>
+                <div class="chips">
+                  @for (item of summary.breakdowns.sources; track item.source) {
+                    <span class="chip">
+                      {{ item.source }} · {{ item.count }}
+                    </span>
+                  }
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel detail-panel" id="scan-detail">
+            <div class="panel-head">
+              <div>
+                <h2>Scan detail</h2>
+                <p>Inspect findings, metadata, and report links for the selected scan.</p>
+              </div>
+              <span class="meta">{{ selectedScanLabel() }}</span>
+            </div>
+
+            @if (selectedScan(); as scan) {
+              <div class="detail-grid">
+                <div class="mini-panel">
+                  <div class="mini-panel__title">Overview</div>
+                  <div class="chips">
+                    <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
+                    <span class="chip">{{ scan.source }}</span>
+                    <span class="chip">{{ scan.language }}</span>
+                    <span class="chip">{{ scan.format }}</span>
+                    <span class="chip">fail on {{ scan.fail_on }}</span>
+                    <span class="chip" [ngClass]="severityTone(scanWorstSeverity(scan))">
+                      {{ scanFindingTotal(scan) }} findings
+                    </span>
+                  </div>
+                  <div class="reviewed-project">
+                    <span class="reviewed-project__label">Reviewed project</span>
+                    <strong>{{ selectedProjectLabel() }}</strong>
+                  </div>
+                  <p class="detail-copy detail-summary">
+                    {{ scanFindingSummary(scan) }} detected in {{ scanRepositoryLabel(scan) }}.
+                  </p>
+                  @if (scan.report_url) {
+                    <p class="detail-copy">
+                      Report:
+                      <a [href]="scan.report_url" target="_blank" rel="noreferrer">
+                        {{ scan.report_url }}
+                      </a>
+                    </p>
+                  }
+                </div>
+
+                <div class="mini-panel">
+                  <div class="mini-panel__title">Findings</div>
+                  @if ((scan.findings || []).length === 0) {
+                    <div class="state state-compact">
+                      <strong>No findings recorded</strong>
+                      <p>This scan did not store any findings in the report payload.</p>
+                    </div>
+                  } @else {
+                    <div class="finding-list">
+                      @for (finding of scan.findings; track $index) {
+                        <article class="finding-card">
+                          <div class="finding-card__head">
+                            <div>
+                              <strong>{{ findingTitle(finding) }}</strong>
+                              <span>{{ findingRuleBadge(finding) }}</span>
+                            </div>
+                            <span class="chip" [ngClass]="findingSeverity(finding)">
+                              {{ findingSeverityLabel(finding) }}
+                            </span>
+                          </div>
+                          <p class="detail-copy">{{ findingLocation(finding) }}</p>
+                          @if (findingEvidence(finding)) {
+                            <p class="detail-copy">
+                              <strong>Evidence:</strong> {{ findingEvidence(finding) }}
+                            </p>
+                          }
+                          @if (findingRecommendation(finding)) {
+                            <p class="detail-copy">
+                              <strong>Fix:</strong> {{ findingRecommendation(finding) }}
+                            </p>
+                          }
+                        </article>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="mini-panel">
+                  <div class="mini-panel__title">Technical metadata</div>
+                  <p class="detail-copy detail-meta-copy">
+                    Extra report context used for debugging or integrations. This is secondary information,
+                    not the main result.
+                  </p>
+                  <pre class="json-block">{{ scan.metadata | json }}</pre>
+                </div>
+              </div>
+            } @else {
+              <div class="state state-compact">
+                <strong>No scan selected</strong>
+                <p>Select a scan from the recent scans table to review its detail payload.</p>
+              </div>
+            }
+          </section>
+
+          <section class="grid">
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>Recent scans</h2>
+                  <p>Latest scans for {{ project.name }} · {{ project.slug }}.</p>
+                </div>
+                <span class="meta">{{ projectScans().length }} rows</span>
+              </div>
+
+              @if (projectScans().length === 0) {
+                <div class="state">
+                  <strong>No scans yet</strong>
+                  <p>Submit a scan through the CLI or GitHub Action to populate this view.</p>
+                </div>
+              } @else {
+                <div class="scan-list">
+                  @for (scan of projectScans(); track scan.id) {
+                    <button
+                      type="button"
+                      class="scan-card"
+                      [class.selected]="selectedScanId() === scan.id"
+                      [attr.aria-pressed]="selectedScanId() === scan.id"
+                      (click)="selectScan(scan.id)"
+                    >
+                      <div class="scan-card__head">
+                        <div class="scan-card__title">
+                          <strong>#{{ scan.id }} · {{ scanRepositoryLabel(scan) }}</strong>
+                          <span>{{ scan.source }} · {{ scan.language }} · {{ scan.format }} · fail on {{ scan.fail_on }}</span>
+                        </div>
+                        <div class="scan-card__meta">
+                          <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
+                          <span class="meta">{{ scan.created_at ? (scan.created_at | date: 'short') : 'n/a' }}</span>
+                        </div>
+                      </div>
+
+                      <div class="scan-card__body">
+                        <div class="chips chips-compact">
+                          <span class="chip" [ngClass]="severityTone(scanWorstSeverity(scan))">
+                            {{ scanFindingTotal(scan) }} findings
+                          </span>
+                          @if (scanSeverityCount(scan, 'critical') > 0) {
+                            <span class="chip danger">{{ scanSeverityCount(scan, 'critical') }} critical</span>
+                          }
+                          @if (scanSeverityCount(scan, 'high') > 0) {
+                            <span class="chip warn">{{ scanSeverityCount(scan, 'high') }} high</span>
+                          }
+                          @if (scanSeverityCount(scan, 'medium') > 0) {
+                            <span class="chip neutral">{{ scanSeverityCount(scan, 'medium') }} medium</span>
+                          }
+                        </div>
+                        <p class="scan-summary">{{ scanFindingSummary(scan) }}</p>
+                        <p class="scan-summary scan-summary--project">
+                          Reviewed project: {{ scanRepositoryLabel(scan) }}
+                        </p>
+                      </div>
+
+                      <div class="scan-card__footer">
+                        <span class="scan-card__footer-copy">Open findings</span>
+                        <span class="button button-ghost button-mini">Inspect</span>
+                      </div>
+                    </button>
+                  }
+                </div>
+              }
+            </article>
+
+            <article class="panel">
+              <div class="panel-head">
+                <div>
+                  <h2>API keys</h2>
+                  <p>Upload tokens for CLI and GitHub Action scans.</p>
+                </div>
+                <span class="meta">{{ projectApiKeys().length }} keys</span>
+              </div>
+
+              @if (!canManageKeys()) {
+                <div class="state">
+                  <strong>Admin auth not configured</strong>
+                  <p>
+                    Add the admin key in the sidebar to list, inspect, and revoke API keys.
+                  </p>
+                </div>
+              } @else if (projectApiKeysError()) {
+                <div class="state">
+                  <strong>Admin key rejected</strong>
+                  <p>{{ projectApiKeysError() }}</p>
+                </div>
+              } @else if (projectApiKeys().length === 0) {
+                <div class="state">
+                  <strong>No keys yet</strong>
+                  <p>Create one with the admin API before pointing a scanner at this project.</p>
+                </div>
+              } @else {
+                <div class="stack">
+                  @for (key of projectApiKeys(); track key.id) {
+                    <div class="key-row" [class.revoked]="!!key.revoked_at">
+                      <div class="cell-stack">
+                        <strong>{{ key.name || 'Unnamed key' }}</strong>
+                        <span>{{ key.key_prefix }}</span>
+                        <span class="meta">
+                          Last used:
+                          {{ key.last_used_at ? (key.last_used_at | date: 'short') : 'never' }}
+                        </span>
+                      </div>
+                      <div class="key-actions">
+                        <span class="chip" [ngClass]="key.revoked_at ? 'danger' : 'ok'">
+                          {{ key.revoked_at ? 'Revoked' : 'Active' }}
+                        </span>
+                        <button
+                          type="button"
+                          class="button button-ghost"
+                          [disabled]="!!key.revoked_at"
+                          (click)="revokeKey(key)"
+                        >
+                          Revoke
+                        </button>
+                      </div>
+                    </div>
+                  }
+                </div>
+              }
+            </article>
+          </section>
+        }
+      } @else {
+        <section class="panel empty-dashboard">
+          <strong>No project selected</strong>
+          <p>Create a project through the API and it will appear here automatically.</p>
+        </section>
+      }
+    </section>
+  </section>
+</main>

@@ -34,6 +34,7 @@ Todavía falta:
 - GitHub Action publicable.
 - Dashboard Angular real en `front/`.
 - Gestión de llaves API de proyecto y subida autenticada de scans.
+- El dashboard Angular de `front/` ya muestra proyectos, resumen, historial y llaves API; la llave admin se guarda localmente en el navegador para habilitar la gestión de llaves.
 - Publicar el paquete en npm para usar `npx patchproof`.
 
 ## Estructura
@@ -43,7 +44,7 @@ patchproof/
   packages/core/  Motor TypeScript de auditoría y reglas internas
   packages/cli/   CLI patchproof
   back/           Backend Laravel para reportes, equipos y llaves API
-  front/          Futuro dashboard Angular
+  front/          Dashboard Angular
   docs/           Arquitectura, monetización y fixtures
 ```
 
@@ -56,6 +57,8 @@ cd /Users/juanurquiza/Documents/dev/patchproof
 npm install
 npm run build
 ```
+
+Si quieres usar el dashboard hospedado, levanta primero el backend Laravel y luego el front de Angular. En desarrollo, el front apunta a `http://127.0.0.1:8001/api` desde `src/environments/environment.development.ts`.
 
 ## Cómo probarlo ahora
 
@@ -78,7 +81,7 @@ PP005  Permissive CORS configuration
 ### 2. Probar con el fixture incluido
 
 ```bash
-node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff
+node packages/cli/dist/index.js paudit --file docs/fixtures/sample.diff
 ```
 
 Ese fixture tiene código inseguro a propósito. Deberías ver 5 hallazgos.
@@ -86,19 +89,19 @@ Ese fixture tiene código inseguro a propósito. Deberías ver 5 hallazgos.
 Para verlo como Markdown:
 
 ```bash
-node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --format markdown
+node packages/cli/dist/index.js paudit --file docs/fixtures/sample.diff --format markdown
 ```
 
 Para verlo como JSON:
 
 ```bash
-node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --format json
+node packages/cli/dist/index.js paudit --file docs/fixtures/sample.diff --format json
 ```
 
 Para generar SARIF:
 
 ```bash
-node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --format sarif
+node packages/cli/dist/index.js paudit --file docs/fixtures/sample.diff --format sarif
 ```
 
 ### 3. Probarlo sobre cambios reales de un repo
@@ -106,13 +109,13 @@ node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --format 
 En cualquier repo donde tengas cambios sin commit:
 
 ```bash
-git diff | /Users/juanurquiza/Documents/dev/patchproof/packages/cli/dist/index.js audit
+git diff | /Users/juanurquiza/Documents/dev/patchproof/packages/cli/dist/index.js paudit
 ```
 
 O desde dentro del repo de PatchProof, cuando sea repo Git:
 
 ```bash
-node packages/cli/dist/index.js audit --diff
+node packages/cli/dist/index.js paudit --diff
 ```
 
 ### 4. Interpretar exit codes
@@ -126,7 +129,7 @@ Por defecto bloquea en `high` o `critical`.
 Ejemplo:
 
 ```bash
-node packages/cli/dist/index.js audit --file docs/fixtures/sample.diff --fail-on critical
+node packages/cli/dist/index.js paudit --file docs/fixtures/sample.diff --fail-on critical
 ```
 
 ## Configuración

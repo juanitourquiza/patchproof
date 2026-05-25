@@ -4,8 +4,7 @@ PatchProof is a local-first security review tool for AI-generated code diffs.
 
 Spanish README: [README_ES.md](README_ES.md).
 
-The first release focuses on a fast npm CLI that audits `git diff` output before code reaches a pull request. The hosted Laravel + Angular product comes after the CLI proves value in real developer workflows.
-The Laravel backend now stores projects, scans, and project API keys for hosted ingestion.
+The first release focuses on a fast npm CLI that audits `git diff` output before code reaches a pull request. The hosted Laravel + Angular product is already in progress: the Laravel backend stores projects, scans, and project API keys for hosted ingestion, and the Angular front-end now shows project summaries, scan history, and key management.
 
 ## Project Layout
 
@@ -14,7 +13,7 @@ patchproof/
   packages/core/  TypeScript audit engine and built-in rules
   packages/cli/   `npx patchproof` CLI
   back/           Laravel API for hosted reports, teams, and API keys
-  front/          Angular dashboard plan for scan history and reports
+  front/          Angular dashboard for scan history and reports
 ```
 
 ## Quick Start
@@ -22,22 +21,24 @@ patchproof/
 ```bash
 npm install
 npm run build
-git diff | node packages/cli/dist/index.js audit
-node packages/cli/dist/index.js audit --diff --format sarif
+git diff | node packages/cli/dist/index.js paudit
+node packages/cli/dist/index.js paudit --diff --format sarif
 ```
+
+If you want the hosted dashboard, run the Laravel backend first and then the Angular front. In development, the front points at `http://127.0.0.1:8001/api` through `src/environments/environment.development.ts`.
 
 After publishing, the intended public command is:
 
 ```bash
-npx patchproof audit --diff
+npx patchproof paudit --diff
 ```
 
 ## CLI Commands
 
 ```bash
-patchproof audit --diff
-patchproof audit --file changes.diff --format json
-git diff | patchproof audit --format markdown
+patchproof paudit --diff
+patchproof paudit --file changes.diff --format json
+git diff | patchproof paudit --format markdown
 patchproof rules
 patchproof init
 ```

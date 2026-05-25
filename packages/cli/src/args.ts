@@ -2,7 +2,7 @@ export type OutputFormat = 'text' | 'json' | 'markdown' | 'sarif';
 export type Language = 'en' | 'es';
 
 export interface CliOptions {
-  readonly command: 'audit' | 'init' | 'rules' | 'help' | 'version';
+  readonly command: 'paudit' | 'audit' | 'init' | 'rules' | 'help' | 'version';
   readonly file?: string;
   readonly useGitDiff: boolean;
   readonly output: OutputFormat | null;
@@ -36,7 +36,7 @@ export function parseArgs(argv: string[]): CliOptions {
     return defaultOptions('rules');
   }
 
-  if (command !== 'audit') {
+  if (command !== 'audit' && command !== 'paudit') {
     return defaultOptions('help');
   }
 
@@ -99,7 +99,17 @@ export function parseArgs(argv: string[]): CliOptions {
     throw new Error(`Unknown option "${value}".`);
   }
 
-  return { command: 'audit', file, useGitDiff, output, outputProvided, failOn, failOnProvided, lang, langProvided };
+  return {
+    command,
+    file,
+    useGitDiff,
+    output,
+    outputProvided,
+    failOn,
+    failOnProvided,
+    lang,
+    langProvided
+  };
 }
 
 function defaultOptions(command: CliOptions['command']): CliOptions {
