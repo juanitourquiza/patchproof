@@ -28,6 +28,18 @@ const result: AuditResult = {
   ]
 };
 
+const emptyResult: AuditResult = {
+  summary: {
+    total: 0,
+    critical: 0,
+    high: 0,
+    medium: 0,
+    low: 0,
+    filesScanned: 9
+  },
+  findings: []
+};
+
 describe('formatResult', () => {
   it('formats markdown reports', () => {
     expect(formatResult(result, 'markdown')).toContain('| critical | PP001 | src/app.ts:2 |');
@@ -44,5 +56,14 @@ describe('formatResult', () => {
 
     expect(formatted).toContain('# Informe PatchProof');
     expect(formatted).toContain('Clave API de OpenAI comprometida en código');
+  });
+
+  it('shows an explicit no-findings message', () => {
+    const markdown = formatResult(emptyResult, 'markdown');
+    const text = formatResult(emptyResult, 'text');
+
+    expect(markdown).toContain('No findings found.');
+    expect(markdown).not.toContain('| Severity | Rule | Location | Finding | Recommendation |');
+    expect(text).toContain('No findings found.');
   });
 });

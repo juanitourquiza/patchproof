@@ -28,6 +28,12 @@ function formatText(result: AuditResult, lang: Language): string {
     text.severity(result.summary.critical, result.summary.high, result.summary.medium, result.summary.low)
   ];
 
+  if (result.findings.length === 0) {
+    lines.push('');
+    lines.push(text.noFindings);
+    return lines.join('\n');
+  }
+
   for (const finding of result.findings) {
     lines.push('');
     lines.push(`[${finding.severity.toUpperCase()}] ${finding.ruleId} ${copyFinding[lang][finding.ruleId]?.title ?? finding.title}`);
@@ -45,10 +51,17 @@ function formatMarkdown(result: AuditResult, lang: Language): string {
     text.heading,
     '',
     text.summaryMarkdown(result.summary.total, result.summary.filesScanned),
-    '',
-    text.tableHeader,
-    '|---|---|---|---|---|'
   ];
+
+  if (result.findings.length === 0) {
+    lines.push('');
+    lines.push(`> ${text.noFindings}`);
+    return lines.join('\n');
+  }
+
+  lines.push('');
+  lines.push(text.tableHeader);
+  lines.push('|---|---|---|---|---|');
 
   for (const finding of result.findings) {
     const localized = copyFinding[lang][finding.ruleId];
@@ -148,6 +161,7 @@ const copyText: Record<Language, {
   summary(total: number, files: number): string;
   summaryMarkdown(total: number, files: number): string;
   severity(critical: number, high: number, medium: number, low: number): string;
+  noFindings: string;
   fix: string;
   tableHeader: string;
 }> = {
@@ -157,6 +171,7 @@ const copyText: Record<Language, {
     summaryMarkdown: (total, files) => `Found **${total}** finding(s) across **${files}** file(s).`,
     severity: (critical, high, medium, low) =>
       `Severity: ${critical} critical, ${high} high, ${medium} medium, ${low} low`,
+    noFindings: 'No findings found.',
     fix: 'Fix',
     tableHeader: '| Severity | Rule | Location | Finding | Recommendation |'
   },
@@ -166,6 +181,7 @@ const copyText: Record<Language, {
     summaryMarkdown: (total, files) => `Se encontraron **${total}** hallazgo(s) en **${files}** archivo(s).`,
     severity: (critical, high, medium, low) =>
       `Severidad: ${critical} crítico(s), ${high} alto(s), ${medium} medio(s), ${low} bajo(s)`,
+    noFindings: 'No se encontraron hallazgos.',
     fix: 'Corrección',
     tableHeader: '| Severidad | Regla | Ubicación | Hallazgo | Recomendación |'
   }
