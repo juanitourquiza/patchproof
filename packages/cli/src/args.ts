@@ -2,9 +2,11 @@ export type OutputFormat = 'text' | 'json' | 'markdown' | 'sarif';
 export type Language = 'en' | 'es';
 
 export interface CliOptions {
-  readonly command: 'paudit' | 'audit' | 'init' | 'rules' | 'help' | 'version';
+  readonly command: 'paudit' | 'audit' | 'ppscan' | 'init' | 'rules' | 'help' | 'version';
   readonly file?: string;
+  readonly targetPath?: string;
   readonly useGitDiff: boolean;
+  readonly includeIgnored: boolean;
   readonly output: OutputFormat | null;
   readonly outputProvided: boolean;
   readonly failOn: 'critical' | 'high' | 'medium' | 'low' | null;
@@ -16,32 +18,45 @@ export interface CliOptions {
 const validFormats = new Set<OutputFormat>(['text', 'json', 'markdown', 'sarif']);
 const validSeverities = new Set<CliOptions['failOn']>(['critical', 'high', 'medium', 'low']);
 const validLanguages = new Set<Language>(['en', 'es']);
+const commandNames = new Set<CliOptions['command']>(['paudit', 'audit', 'ppscan', 'init', 'rules', 'help', 'version']);
 
-export function parseArgs(argv: string[]): CliOptions {
-  const [command = 'help', ...rest] = argv;
+export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
+  const [first = 'help', ...rest] = argv;
+  const runtimeCommand = runtimeName ? runtimeName.split(/[\\/]/).pop() : '';
+  const defaultScanCommand = runtimeCommand === 'ppscan';
 
-  if (command === '--version' || command === '-v') {
+  if (first === '--version' || first === '-v') {
     return defaultOptions('version');
   }
 
-  if (command === '--help' || command === '-h') {
+  if (first === '--help' || first === '-h') {
     return defaultOptions('help');
   }
 
-  if (command === 'init') {
-    return defaultOptions('init');
+  let command: CliOptions['command'];
+  let options = rest;
+
+  if (commandNames.has(first as CliOptions['command'])) {
+    command = first as CliOptions['command'];
+  } else if (defaultScanCommand) {
+    command = 'ppscan';
+    options = argv;
+  } else {
+    return defaultOptions('help');
   }
 
-  if (command === 'rules') {
-    return defaultOptions('rules');
+  if (command === 'init' || command === 'rules') {
+    return defaultOptions(command);
   }
 
-  if (command !== 'audit' && command !== 'paudit') {
+  if (command !== 'audit' && command !== 'paudit' && command !== 'ppscan') {
     return defaultOptions('help');
   }
 
   let file: string | undefined;
+  let targetPath: string | undefined;
   let useGitDiff = false;
+  let includeIgnored = false;
   let output: OutputFormat | null = null;
   let outputProvided = false;
   let failOn: CliOptions['failOn'] = null;
@@ -49,12 +64,17 @@ export function parseArgs(argv: string[]): CliOptions {
   let lang: Language | null = null;
   let langProvided = false;
 
-  for (let index = 0; index < rest.length; index += 1) {
-    const value = rest[index];
+  for (let index = 0; index < options.length; index += 1) {
+    const value = options[index];
 
     if (value === '--file') {
-      file = requiredValue(rest, index, '--file');
+      file = requiredValue(options, index, '--file');
       index += 1;
+      continue;
+    }
+
+    if (command === 'ppscan' && !value.startsWith('--') && !targetPath) {
+      targetPath = value;
       continue;
     }
 
@@ -63,8 +83,13 @@ export function parseArgs(argv: string[]): CliOptions {
       continue;
     }
 
+    if (value === '--include-ignored') {
+      includeIgnored = true;
+      continue;
+    }
+
     if (value === '--format') {
-      const candidate = requiredValue(rest, index, '--format') as OutputFormat;
+      const candidate = requiredValue(options, index, '--format') as OutputFormat;
       if (!validFormats.has(candidate)) {
         throw new Error(`Invalid --format "${candidate}". Use text, json, markdown, or sarif.`);
       }
@@ -75,7 +100,7 @@ export function parseArgs(argv: string[]): CliOptions {
     }
 
     if (value === '--fail-on') {
-      const candidate = requiredValue(rest, index, '--fail-on') as CliOptions['failOn'];
+      const candidate = requiredValue(options, index, '--fail-on') as CliOptions['failOn'];
       if (!validSeverities.has(candidate)) {
         throw new Error(`Invalid --fail-on "${candidate}". Use critical, high, medium, or low.`);
       }
@@ -86,7 +111,7 @@ export function parseArgs(argv: string[]): CliOptions {
     }
 
     if (value === '--lang') {
-      const candidate = requiredValue(rest, index, '--lang') as Language;
+      const candidate = requiredValue(options, index, '--lang') as Language;
       if (!validLanguages.has(candidate)) {
         throw new Error(`Invalid --lang "${candidate}". Use en or es.`);
       }
@@ -102,7 +127,9 @@ export function parseArgs(argv: string[]): CliOptions {
   return {
     command,
     file,
+    targetPath,
     useGitDiff,
+    includeIgnored,
     output,
     outputProvided,
     failOn,
@@ -116,6 +143,7 @@ function defaultOptions(command: CliOptions['command']): CliOptions {
   return {
     command,
     useGitDiff: false,
+    includeIgnored: false,
     output: 'text',
     outputProvided: false,
     failOn: null,

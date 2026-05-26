@@ -6,7 +6,9 @@ describe('parseArgs', () => {
     expect(parseArgs(['paudit', '--file', 'changes.diff', '--format', 'sarif', '--fail-on', 'medium', '--lang', 'es'])).toEqual({
       command: 'paudit',
       file: 'changes.diff',
+      targetPath: undefined,
       useGitDiff: false,
+      includeIgnored: false,
       output: 'sarif',
       outputProvided: true,
       failOn: 'medium',
@@ -20,7 +22,9 @@ describe('parseArgs', () => {
     expect(parseArgs(['paudit', '--diff'])).toEqual({
       command: 'paudit',
       file: undefined,
+      targetPath: undefined,
       useGitDiff: true,
+      includeIgnored: false,
       output: null,
       outputProvided: false,
       failOn: null,
@@ -32,6 +36,22 @@ describe('parseArgs', () => {
 
   it('keeps audit as a compatibility alias', () => {
     expect(parseArgs(['audit', '--diff']).command).toBe('audit');
+  });
+
+  it('parses ppscan options and repo path', () => {
+    expect(parseArgs(['ppscan', '/tmp/project', '--include-ignored', '--format', 'markdown'])).toEqual({
+      command: 'ppscan',
+      file: undefined,
+      targetPath: '/tmp/project',
+      useGitDiff: false,
+      includeIgnored: true,
+      output: 'markdown',
+      outputProvided: true,
+      failOn: null,
+      failOnProvided: false,
+      lang: null,
+      langProvided: false
+    });
   });
 
   it('rejects invalid formats', () => {

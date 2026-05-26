@@ -23,6 +23,7 @@ npm install
 npm run build
 git diff | node packages/cli/dist/index.js paudit
 node packages/cli/dist/index.js paudit --diff --format sarif
+node packages/cli/dist/index.js ppscan /path/to/repo --format markdown
 ```
 
 If you want the hosted dashboard, run the Laravel backend first and then the Angular front. In development, the front points at `http://127.0.0.1:8001/api` through `src/environments/environment.development.ts`.
@@ -39,6 +40,7 @@ npx patchproof paudit --diff
 patchproof paudit --diff
 patchproof paudit --file changes.diff --format json
 git diff | patchproof paudit --format markdown
+patchproof ppscan /path/to/repo --include-ignored --format markdown
 patchproof rules
 patchproof init
 ```
@@ -92,6 +94,7 @@ npm run build
 1. Expand rules with AST-aware checks for TypeScript, PHP/Laravel, Angular, and Node.js.
 2. Add custom rules and config loading from `patchproof.config.json`.
 3. Ship the GitHub Action wrapper with SARIF upload support.
-4. Implement `back/` Laravel hosted reporting.
-5. Add project API key management and authenticated scan ingestion.
-6. Implement `front/` Angular dashboard.
+4. Improve `ppscan` working tree scanning and path filtering.
+5. Implement `back/` Laravel hosted reporting.
+6. Add project API key management and authenticated scan ingestion.
+7. Implement `front/` Angular dashboard.

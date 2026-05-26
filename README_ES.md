@@ -13,6 +13,7 @@ El backend Laravel de `back/` ya existe y guarda proyectos, scans y llaves API d
 Ya hace:
 
 - Lee un diff desde `git diff`, archivo `.diff` o stdin.
+- Revisa el working tree completo con `ppscan`.
 - Analiza solo líneas agregadas.
 - Detecta riesgos comunes:
   - secretos hardcodeados;
@@ -92,6 +93,12 @@ Para verlo como Markdown:
 node packages/cli/dist/index.js paudit --file docs/fixtures/sample.diff --format markdown
 ```
 
+Para revisar un repositorio completo:
+
+```bash
+node packages/cli/dist/index.js ppscan /ruta/al/repo --format markdown
+```
+
 Para verlo como JSON:
 
 ```bash
@@ -110,6 +117,12 @@ En cualquier repo donde tengas cambios sin commit:
 
 ```bash
 git diff | /Users/juanurquiza/Documents/dev/patchproof/packages/cli/dist/index.js paudit
+```
+
+O para escanear el árbol completo:
+
+```bash
+node packages/cli/dist/index.js ppscan /Users/juanurquiza/Documents/dev/ng-hackeruna --include-ignored --format markdown
 ```
 
 O desde dentro del repo de PatchProof, cuando sea repo Git:

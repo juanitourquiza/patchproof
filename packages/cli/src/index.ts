@@ -6,11 +6,12 @@ import { loadConfig, resolveAuditRules, resolveFailOn, resolveLanguage } from '.
 import { formatResult, formatRules } from './format.js';
 import { helpText, initConfigText } from './help.js';
 import { readDiffInput } from './input.js';
+import { scanWorkspace } from './scan.js';
 import { shouldFail } from './threshold.js';
 
-export async function main(argv = process.argv.slice(2)): Promise<number> {
+export async function main(argv = process.argv.slice(2), runtimeName = process.argv[1] ?? ''): Promise<number> {
   try {
-    const options = parseArgs(argv);
+    const options = parseArgs(argv, runtimeName);
     const { config } = loadConfig();
 
     if (options.command === 'help') {
@@ -32,6 +33,19 @@ export async function main(argv = process.argv.slice(2)): Promise<number> {
       writeFileSync('patchproof.config.json', `${initConfigText()}\n`, { flag: 'wx' });
       console.log('Created patchproof.config.json');
       return 0;
+    }
+
+    if (options.command === 'ppscan') {
+      const failOn = resolveFailOn(options.failOn, config);
+      const result = await scanWorkspace({
+        targetPath: options.targetPath ?? process.cwd(),
+        includeIgnored: options.includeIgnored,
+        minimumSeverity: failOn
+      });
+      const lang = resolveLanguage(options.lang, config);
+      const output = options.outputProvided ? options.output ?? 'text' : 'text';
+      console.log(formatResult(result, output, lang));
+      return shouldFail(result, failOn) ? 1 : 0;
     }
 
     const diff = await readDiffInput(options);

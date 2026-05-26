@@ -6,7 +6,8 @@
   "type": "module",
   "bin": {
     "patchproof": "dist/index.js",
-    "paudit": "dist/index.js"
+    "paudit": "dist/index.js",
+    "ppscan": "dist/index.js"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
