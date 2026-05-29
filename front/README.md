@@ -7,8 +7,10 @@ Angular dashboard for hosted PatchProof scans, project summaries, and API keys.
 - Project list with scan counts.
 - Project summary with severity, language, and source rollups.
 - Recent scan cards with project name, findings, and severity summary.
+- Remediation guidance per finding, derived from the hosted scan payload.
 - Project API keys with revocation controls.
 - Local admin key storage in the browser to unlock API key management.
+- Optional local AI API key storage to generate enriched remediation guidance.
 
 ## Local development
 

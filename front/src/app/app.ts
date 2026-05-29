@@ -3,10 +3,12 @@ import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
 import { PatchProofApiService } from './patchproof-api.service';
 import {
+  AiRemediationResponse,
   ApiKeyRecord,
   HealthResponse,
   ProjectRecord,
   ProjectSummaryResponse,
+  RemediationRecord,
   ScanRecord,
   UsageEventRecord,
 } from './patchproof.types';
@@ -30,6 +32,7 @@ const FINDING_LABELS: Record<string, string> = {
 export class App implements OnInit {
   private readonly api = inject(PatchProofApiService);
   private readonly adminKeyStorageKey = 'patchproof.admin.key';
+  private readonly aiKeyStorageKey = 'patchproof.remediation.ai.key';
 
   protected readonly loading = signal(true);
   protected readonly loadingProject = signal(false);
@@ -41,11 +44,17 @@ export class App implements OnInit {
   protected readonly projectSummary = signal<ProjectSummaryResponse | null>(null);
   protected readonly projectScans = signal<ScanRecord[]>([]);
   protected readonly projectUsageEvents = signal<UsageEventRecord[]>([]);
+  protected readonly aiRemediations = signal<AiRemediationResponse | null>(null);
+  protected readonly aiRemediationsLoading = signal(false);
+  protected readonly aiRemediationsError = signal<string | null>(null);
   protected readonly selectedScanId = signal<number | null>(null);
   protected readonly projectApiKeys = signal<ApiKeyRecord[]>([]);
   protected readonly projectApiKeysError = signal<string | null>(null);
   protected readonly storedAdminKey = signal<string>('');
+  protected readonly aiKeyDraft = signal('');
+  protected readonly storedAiKey = signal<string>('');
   protected readonly canManageKeys = computed(() => this.storedAdminKey().trim().length > 0);
+  protected readonly canUseAi = computed(() => this.storedAiKey().trim().length > 0);
   protected readonly actionMessage = signal<string | null>(null);
   protected readonly refreshedAt = signal<Date | null>(null);
 
@@ -73,6 +82,8 @@ export class App implements OnInit {
 
   protected selectScan(scanId: number): void {
     this.selectedScanId.set(scanId);
+    this.aiRemediations.set(null);
+    this.aiRemediationsError.set(null);
     window.requestAnimationFrame(() => {
       document.getElementById('scan-detail')?.scrollIntoView({
         behavior: 'smooth',
@@ -97,6 +108,29 @@ export class App implements OnInit {
     await this.api.revokeProjectApiKey(project.id, apiKey.id, this.storedAdminKey());
     this.actionMessage.set(`Revoked ${apiKey.name ?? apiKey.key_prefix}.`);
     await this.loadProject(project.id);
+  }
+
+  protected async generateAiRemediations(): Promise<void> {
+    const scan = this.selectedScan();
+
+    if (!scan || this.aiRemediationsLoading()) {
+      return;
+    }
+
+    this.aiRemediationsLoading.set(true);
+    this.aiRemediationsError.set(null);
+
+    try {
+      const response = await this.api.generateAiRemediations(scan.id, {
+        apiKey: this.storedAiKey() || undefined,
+      });
+
+      this.aiRemediations.set(response.data);
+    } catch (error) {
+      this.aiRemediationsError.set(this.toErrorMessage(error));
+    } finally {
+      this.aiRemediationsLoading.set(false);
+    }
   }
 
   protected async saveAdminKey(): Promise<void> {
@@ -126,6 +160,27 @@ export class App implements OnInit {
     this.projectApiKeys.set([]);
     this.projectApiKeysError.set(null);
     this.actionMessage.set('Admin key removed from this browser.');
+  }
+
+  protected async saveAiKey(): Promise<void> {
+    const aiKey = this.aiKeyDraft().trim();
+
+    if (!aiKey) {
+      this.clearAiKey();
+      return;
+    }
+
+    window.localStorage.setItem(this.aiKeyStorageKey, aiKey);
+    this.storedAiKey.set(aiKey);
+    this.actionMessage.set('AI key saved locally in this browser.');
+    this.aiKeyDraft.set('');
+  }
+
+  protected clearAiKey(): void {
+    window.localStorage.removeItem(this.aiKeyStorageKey);
+    this.storedAiKey.set('');
+    this.aiKeyDraft.set('');
+    this.actionMessage.set('AI key removed from this browser.');
   }
 
   protected statusTone(status: string): StatusTone {
@@ -279,6 +334,20 @@ export class App implements OnInit {
     return this.findingText(finding, ['recommendation', 'fix', 'suggestion']);
   }
 
+  protected remediationPrimaryFix(remediation: RemediationRecord): string {
+    return remediation.primary_fix.description;
+  }
+
+  protected remediationAlternatives(remediation: RemediationRecord): string {
+    return remediation.alternatives
+      .map((item) => `${item.title}: ${item.description}`)
+      .join(' · ');
+  }
+
+  protected remediationPrompt(remediation: RemediationRecord): string {
+    return remediation.ai_prompt;
+  }
+
   protected findingRuleBadge(finding: Record<string, unknown>): string {
     const ruleId = this.findingText(finding, ['rule_id', 'ruleId']);
 
@@ -351,6 +420,8 @@ export class App implements OnInit {
       this.projectSummary.set(summary);
       this.projectScans.set(summary.recent_scans);
       this.projectUsageEvents.set(summary.recent_usages ?? []);
+      this.aiRemediations.set(null);
+      this.aiRemediationsError.set(null);
       const preservedScanId = this.selectedScanId();
       const nextSelectedScanId =
         summary.recent_scans.find((scan) => scan.id === preservedScanId)?.id ??
@@ -378,6 +449,8 @@ export class App implements OnInit {
   private restoreAdminKey(): void {
     const stored = window.localStorage.getItem(this.adminKeyStorageKey) ?? '';
     this.storedAdminKey.set(stored);
+    const storedAiKey = window.localStorage.getItem(this.aiKeyStorageKey) ?? '';
+    this.storedAiKey.set(storedAiKey);
   }
 
   private findingText(finding: Record<string, unknown>, keys: string[]): string {

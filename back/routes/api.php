@@ -5,6 +5,7 @@ use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ProjectApiKeyController;
 use App\Http\Controllers\Api\UsageEventController;
 use App\Http\Controllers\Api\ScanController;
+use App\Http\Controllers\Api\ScanRemediationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/health', HealthController::class);
@@ -21,5 +22,6 @@ Route::delete('/projects/{project}/api-keys/{apiKey}', [ProjectApiKeyController:
 Route::get('/scans', [ScanController::class, 'index']);
 Route::get('/scans/{scan}', [ScanController::class, 'show']);
 Route::post('/scans', [ScanController::class, 'store']);
+Route::post('/scans/{scan}/remediations/ai', [ScanRemediationController::class, 'ai']);
 Route::get('/usage-events', [UsageEventController::class, 'index']);
 Route::post('/projects/{project}/usage-events', [UsageEventController::class, 'store']);

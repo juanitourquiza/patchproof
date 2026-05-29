@@ -5,6 +5,8 @@ Laravel API for hosted PatchProof data.
 ## Purpose
 
 This backend stores projects and scan reports produced by the local CLI or the GitHub Action.
+It also derives remediation guidance for each finding so the dashboard can show fix options
+without needing AI.
 
 It is intentionally small at first:
 
@@ -47,6 +49,19 @@ To upload scans, send the issued key in `Authorization: Bearer <token>` or
 `GET /api/projects/{project}/summary` returns totals, status breakdowns,
 language/source breakdowns, severity rollups, the latest scan timestamp, and
 the five most recent scans for the dashboard.
+
+Each scan payload also includes `remediations`, a deterministic set of fix
+options generated from the finding rule IDs. The contract is AI-ready:
+`config/patchproof.php` exposes `remediation_ai` settings so a future release
+can add optional provider-based enrichment without breaking the current API.
+
+Optional AI enrichment is available through:
+
+- `POST /api/scans/{scan}/remediations/ai`
+
+The endpoint accepts an optional `api_key` in the request body or the
+`X-PatchProof-AI-Key` header. If AI is disabled or no key is provided, it falls
+back to deterministic remediation guidance so the dashboard stays useful.
 
 ## Data model
 

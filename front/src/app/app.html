@@ -82,6 +82,46 @@
         }
       </section>
 
+      <section class="mini-panel auth-panel">
+        <div class="mini-panel__title">AI access</div>
+        @if (canUseAi()) {
+          <p class="auth-copy">
+            Stored locally in this browser. Used to ask your own AI provider for remediation guidance.
+          </p>
+          <div class="auth-actions">
+            <span class="chip ok">Enabled</span>
+            <button type="button" class="button button-ghost" (click)="clearAiKey()">
+              Remove key
+            </button>
+          </div>
+        } @else {
+          <p class="auth-copy">
+            Add a provider API key if you want PatchProof to enrich the deterministic remediation guidance.
+          </p>
+          <label class="field">
+            <span>AI API key</span>
+            <input
+              type="password"
+              autocomplete="off"
+              spellcheck="false"
+              [value]="aiKeyDraft()"
+              (input)="aiKeyDraft.set($any($event.target).value)"
+              placeholder="sk-..."
+            />
+          </label>
+          <div class="auth-actions">
+            <button
+              type="button"
+              class="button"
+              [disabled]="!aiKeyDraft().trim()"
+              (click)="saveAiKey()"
+            >
+              Save locally
+            </button>
+          </div>
+        }
+      </section>
+
       @if (loading()) {
         <div class="state state-loading">Loading projects...</div>
       } @else if (projects().length === 0) {
@@ -214,13 +254,25 @@
           </section>
 
           <section class="panel detail-panel" id="scan-detail">
-            <div class="panel-head">
-              <div>
-                <h2>Scan detail</h2>
-                <p>Inspect findings, metadata, and report links for the selected scan.</p>
+              <div class="panel-head">
+                <div>
+                  <h2>Scan detail</h2>
+                  <p>Inspect findings, metadata, and report links for the selected scan.</p>
+                </div>
+                <div class="scan-detail-actions">
+                  <span class="meta">{{ selectedScanLabel() }}</span>
+                  @if (selectedScan()) {
+                    <button
+                      type="button"
+                      class="button button-ghost button-mini"
+                      [disabled]="aiRemediationsLoading()"
+                      (click)="generateAiRemediations()"
+                    >
+                      {{ aiRemediationsLoading() ? 'Generating…' : 'Generate AI guidance' }}
+                    </button>
+                  }
+                </div>
               </div>
-              <span class="meta">{{ selectedScanLabel() }}</span>
-            </div>
 
             @if (selectedScan(); as scan) {
               <div class="detail-grid">
@@ -276,6 +328,89 @@
                           }
                         </article>
                       }
+                    </div>
+                  }
+                </div>
+
+                <div class="mini-panel">
+                  <div class="mini-panel__title">Remediation guidance</div>
+                  @if ((scan.remediations || []).length === 0) {
+                    <div class="state state-compact">
+                      <strong>No remediation guidance</strong>
+                      <p>PatchProof could not derive fix options for this scan payload.</p>
+                    </div>
+                  } @else {
+                    <div class="finding-list">
+                      @for (remediation of scan.remediations; track remediation.rule_id + '-' + remediation.finding_title) {
+                        <article class="finding-card">
+                          <div class="finding-card__head">
+                            <div>
+                              <strong>{{ remediation.finding_title }}</strong>
+                              <span>{{ remediation.rule_id || 'Rule' }} · {{ remediation.rule_title }}</span>
+                            </div>
+                            <span class="chip neutral">AI-ready</span>
+                          </div>
+                          <p class="detail-copy">{{ remediation.summary }}</p>
+                          <p class="detail-copy">
+                            <strong>Primary fix:</strong> {{ remediationPrimaryFix(remediation) }}
+                          </p>
+                          @if (remediation.alternatives.length > 0) {
+                            <p class="detail-copy">
+                              <strong>Alternatives:</strong> {{ remediationAlternatives(remediation) }}
+                            </p>
+                          }
+                          <p class="detail-copy detail-meta-copy">
+                            <strong>AI prompt:</strong> {{ remediationPrompt(remediation) }}
+                          </p>
+                        </article>
+                      }
+                    </div>
+                  }
+                </div>
+
+                <div class="mini-panel">
+                  <div class="mini-panel__title">AI enrichment</div>
+                  @if (aiRemediationsError()) {
+                    <div class="state state-compact">
+                      <strong>AI request failed</strong>
+                      <p>{{ aiRemediationsError() }}</p>
+                    </div>
+                  } @else if (aiRemediations(); as ai) {
+                    @if (ai.note) {
+                      <p class="detail-copy">{{ ai.note }}</p>
+                    }
+                    <div class="chips">
+                      <span class="chip neutral">{{ ai.source }}</span>
+                      <span class="chip">{{ ai.provider }}</span>
+                      <span class="chip">{{ ai.model }}</span>
+                    </div>
+                    @if (ai.remediations.length === 0) {
+                      <div class="state state-compact">
+                        <strong>No AI remediations returned</strong>
+                      </div>
+                    } @else {
+                      <div class="finding-list">
+                        @for (remediation of ai.remediations; track remediation.rule_id + '-' + remediation.finding_title) {
+                          <article class="finding-card">
+                            <div class="finding-card__head">
+                              <div>
+                                <strong>{{ remediation.finding_title }}</strong>
+                                <span>{{ remediation.rule_id || 'Rule' }} · {{ remediation.rule_title }}</span>
+                              </div>
+                              <span class="chip neutral">{{ remediation.confidence || 'medium' }}</span>
+                            </div>
+                            <p class="detail-copy">{{ remediation.summary }}</p>
+                            <p class="detail-copy">
+                              <strong>Primary fix:</strong> {{ remediation.primary_fix.title }} — {{ remediation.primary_fix.description }}
+                            </p>
+                          </article>
+                        }
+                      </div>
+                    }
+                  } @else {
+                    <div class="state state-compact">
+                      <strong>No AI output yet</strong>
+                      <p>Generate AI guidance to enrich deterministic suggestions with a provider call.</p>
                     </div>
                   }
                 </div>

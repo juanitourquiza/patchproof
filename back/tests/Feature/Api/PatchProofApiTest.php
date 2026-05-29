@@ -4,6 +4,7 @@ namespace Tests\Feature\Api;
 
 use App\Models\Project;
 use App\Models\ProjectApiKey;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -152,6 +153,13 @@ class PatchProofApiTest extends TestCase
                         'ruleId' => 'PP001',
                         'severity' => 'critical',
                     ],
+                    [
+                        'ruleId' => 'PP002',
+                        'severity' => 'high',
+                        'title' => 'Potential SQL injection',
+                        'description' => 'The added line builds a SQL statement with string concatenation.',
+                        'evidence' => '$query->orderByRaw("CASE WHEN report.status = " . KReport::STATUS_PENDING . " THEN 0 ELSE 1 END");',
+                    ],
                 ],
                 'metadata' => [
                     'tool' => 'patchproof',
@@ -161,7 +169,10 @@ class PatchProofApiTest extends TestCase
             ->assertJsonPath('data.project.id', $project->id)
             ->assertJsonPath('data.language', 'es')
             ->assertJsonPath('data.summary.total', 2)
-            ->assertJsonPath('data.findings.0.ruleId', 'PP001');
+            ->assertJsonPath('data.findings.0.ruleId', 'PP001')
+            ->assertJsonPath('data.remediations.1.rule_id', 'PP002')
+            ->assertJsonPath('data.remediations.1.primary_fix.title', 'Use bound parameters')
+            ->assertJsonPath('data.remediations.1.source', 'deterministic');
 
         $scanId = $response->json('data.id');
 
@@ -373,5 +384,86 @@ class PatchProofApiTest extends TestCase
             ->assertJsonPath('data.breakdowns.severities.0.count', 1)
             ->assertJsonCount(2, 'data.recent_scans')
             ->assertJsonCount(2, 'data.recent_usages');
+    }
+
+    public function test_ai_remediation_endpoint_returns_ai_enrichment_when_key_is_present(): void
+    {
+        config()->set('patchproof.remediation_ai.enabled', true);
+        config()->set('patchproof.remediation_ai.api_key', 'service-key');
+
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'CLI',
+            'key_prefix' => 'patchproof',
+            'key_hash' => hash('sha256', 'project-key'),
+        ]);
+
+        $scan = $this->withHeader('X-PatchProof-Key', 'project-key')
+            ->postJson('/api/scans', [
+                'project_id' => $project->id,
+                'status' => 'completed',
+                'language' => 'en',
+                'source' => 'cli',
+                'findings' => [
+                    [
+                        'ruleId' => 'PP002',
+                        'title' => 'Potential SQL injection',
+                        'description' => 'SQL is being built with concatenation.',
+                        'evidence' => '$query->orderByRaw("CASE WHEN report.status = " . KReport::STATUS_PENDING . " THEN 0 ELSE 1 END");',
+                    ],
+                ],
+            ])
+            ->assertCreated()
+            ->json('data.id');
+
+        Http::fake([
+            'https://api.openai.com/v1/chat/completions' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => json_encode([
+                                'remediations' => [
+                                    [
+                                        'rule_id' => 'PP002',
+                                        'rule_title' => 'Potential SQL injection',
+                                        'finding_title' => 'Potential SQL injection',
+                                        'summary' => 'Use parameterized queries.',
+                                        'source' => 'ai',
+                                        'primary_fix' => [
+                                            'title' => 'Use bound parameters',
+                                            'description' => 'Move raw values into placeholders.',
+                                        ],
+                                        'alternatives' => [
+                                            [
+                                                'title' => 'Use query builder',
+                                                'description' => 'Prefer builder methods.',
+                                            ],
+                                        ],
+                                        'ai_prompt' => 'Rule: PP002 ...',
+                                        'confidence' => 'high',
+                                    ],
+                                ],
+                            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $this->postJson("/api/scans/{$scan}/remediations/ai", [
+            'api_key' => 'service-key',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.scan_id', $scan)
+            ->assertJsonPath('data.source', 'ai')
+            ->assertJsonPath('data.provider', 'openai')
+            ->assertJsonPath('data.remediations.0.rule_id', 'PP002')
+            ->assertJsonPath('data.remediations.0.primary_fix.title', 'Use bound parameters');
     }
 }

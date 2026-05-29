@@ -1,0 +1,11 @@
+diff --git a/app/Http/Controllers/CronController.php b/app/Http/Controllers/CronController.php
+--- a/app/Http/Controllers/CronController.php
++++ b/app/Http/Controllers/CronController.php
+@@ -0,0 +1,8 @@
++<?php
++
++class CronController
++{
++    public function syncInterests() { $this->taskService->executeTask(\App\Tasks\SyncUserInterestToAccountInterestTask::class, []); }
++    public function syncPickupPoints() { $this->glsPickupPointSyncService->sync(); }
++}

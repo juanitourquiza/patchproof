@@ -4,7 +4,7 @@ import type { AuditRule, Finding } from '../types.js';
 const relevantBusinessFilesPattern = /^(?:app\/Http\/Controllers\/|routes\/api\.php$|routes\/admin\.php$)/i;
 
 const dangerousBusinessActionPattern =
-  /\b(?:refund|publish|approve|cancel|promote|grant|transfer|void|charge|sync|ban|suspend|activate|deactivate|revoke)\b\s*\(/i;
+  /\b(?:refund|publish|approve|cancel|promote|grant|transfer|void|charge|ban|suspend|activate|deactivate|revoke)\b\s*\(/i;
 
 const explicitGuardPattern = /(?:confirm|confirmation|review|dry[-]?run|preview|approve(?:d)?|validated?|verification|withconfirmation|afterreview)/i;
 

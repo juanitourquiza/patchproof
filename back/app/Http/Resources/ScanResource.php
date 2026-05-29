@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\Remediation\FindingRemediationService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -31,6 +32,7 @@ class ScanResource extends JsonResource
             'status' => $this->status,
             'summary' => $this->summary,
             'findings' => $this->findings,
+            'remediations' => app(FindingRemediationService::class)->forFindings($this->findings ?? []),
             'metadata' => $this->metadata,
             'report_url' => $this->report_url,
             'created_at' => $this->created_at?->toIso8601String(),

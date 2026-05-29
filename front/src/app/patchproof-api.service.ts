@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
 
 import {
+  AiRemediationResponse,
   ApiKeyListResponse,
   ApiKeyRecord,
   HealthResponse,
@@ -80,6 +81,28 @@ export class PatchProofApiService {
       this.http.get<{ data: UsageEventRecord[] }>(`${this.baseUrl}/usage-events`, {
         params: httpParams,
       })
+    );
+  }
+
+  generateAiRemediations(
+    scanId: number,
+    params: { apiKey?: string; model?: string } = {}
+  ): Promise<{ data: AiRemediationResponse }> {
+    const body: Record<string, string> = {};
+
+    if (params.apiKey?.trim()) {
+      body['api_key'] = params.apiKey.trim();
+    }
+
+    if (params.model?.trim()) {
+      body['model'] = params.model.trim();
+    }
+
+    return firstValueFrom(
+      this.http.post<{ data: AiRemediationResponse }>(
+        `${this.baseUrl}/scans/${scanId}/remediations/ai`,
+        body
+      )
     );
   }
 

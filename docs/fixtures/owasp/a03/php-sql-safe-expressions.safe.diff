@@ -1,0 +1,16 @@
+diff --git a/app/Repositories/PickupPointRepository.php b/app/Repositories/PickupPointRepository.php
+--- a/app/Repositories/PickupPointRepository.php
++++ b/app/Repositories/PickupPointRepository.php
+@@ -0,0 +1,11 @@
++<?php
++
++class PickupPointRepository
++{
++    public function order($query, Request $request) {
++        $lat = (float) $request->input('lat');
++        $lng = (float) $request->input('lng');
++        $distanceExpression = '(6371 * acos(least(1, cos(radians(?)) * cos(radians(latitude)) * cos(radians(longitude) - radians(?)) + sin(radians(?)) * sin(radians(latitude)))))';
++        $query->selectRaw("{$distanceExpression} as distance_km", [$lat, $lng, $lat]);
++        $query->orderByRaw("CASE WHEN report.status = " . KReport::STATUS_PENDING . " THEN 0 ELSE 1 END");
++    }
++}

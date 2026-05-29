@@ -87,17 +87,33 @@ describe('auditDiff', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('does not flag sync-style maintenance actions without a destructive business step', () => {
+    const diff = readFileSync(fixturePath('a04', 'sync-maintenance.safe.diff'), 'utf8');
+
+    const result = auditDiff(diff);
+
+    expect(result.findings).toEqual([]);
+  });
+
   it('flags php raw sql built with concatenation or interpolation', () => {
     const diff = readFileSync(fixturePath('a03', 'php-sql-injection.vulnerable.diff'), 'utf8');
 
     const result = auditDiff(diff);
 
-    expect(result.findings).toHaveLength(2);
-    expect(result.findings.map((finding) => finding.ruleId)).toEqual(['PP002', 'PP002']);
+    expect(result.findings).toHaveLength(1);
+    expect(result.findings.map((finding) => finding.ruleId)).toEqual(['PP002']);
   });
 
   it('does not flag php raw sql with bindings', () => {
     const diff = readFileSync(fixturePath('a03', 'php-sql-injection.safe.diff'), 'utf8');
+
+    const result = auditDiff(diff);
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('does not flag php raw sql with constant expressions and bound parameters', () => {
+    const diff = readFileSync(fixturePath('a03', 'php-sql-safe-expressions.safe.diff'), 'utf8');
 
     const result = auditDiff(diff);
 
@@ -234,6 +250,14 @@ describe('auditDiff', () => {
 
   it('does not flag strong password values', () => {
     const diff = readFileSync(fixturePath('a07', 'weak-password.safe.diff'), 'utf8');
+
+    const result = auditDiff(diff);
+
+    expect(result.findings).toEqual([]);
+  });
+
+  it('does not flag weak passwords outside app code', () => {
+    const diff = readFileSync(fixturePath('a07', 'weak-password-nonapp.safe.diff'), 'utf8');
 
     const result = auditDiff(diff);
 

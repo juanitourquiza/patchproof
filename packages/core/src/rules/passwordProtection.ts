@@ -1,7 +1,7 @@
 import { createFinding } from '../finding.js';
 import type { AuditRule, Finding } from '../types.js';
 
-const appFilePattern = /(?:^|\/)(?:app|database\/seeders|scripts)\/.*\.php$/i;
+const appFilePattern = /(?:^|\/)app\/.*\.php$/i;
 const weakPasswordPattern = /\b(?:Hash::make|bcrypt)\s*\(\s*(?:''|""|['"]password['"]|['"]123456['"]|['"]123Qwerty['"])\s*\)/i;
 const passwordAssignmentPattern = /\bpassword\b\s*=>\s*(?:''|""|['"]password['"]|['"]123456['"]|['"]123Qwerty['"])\b/i;
 

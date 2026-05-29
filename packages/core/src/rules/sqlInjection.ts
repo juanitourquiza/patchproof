@@ -5,6 +5,10 @@ import type { AuditRule, Finding } from '../types.js';
 const sqlCallPattern = /\b(?:query|raw|execute|exec|statement|select)\s*\(/i;
 const interpolationPattern = /(`[^`]*(?:\$\{[^}]+}|SELECT|INSERT|UPDATE|DELETE)[^`]*`|['"][^'"]*(?:SELECT|INSERT|UPDATE|DELETE)[^'"]*['"]\s*\+)/i;
 const phpSqlCallPattern = /\b(?:whereRaw|orderByRaw|havingRaw|selectRaw|raw|query|statement|select|DB::raw|PDO::query|mysqli_query|pg_query)\s*\(/i;
+const phpInputSourcePattern = /\b(?:request|request\(\)|input\(|query\(|body\(|params\(|payload\(|validated\(|all\(|only\(|getInput\(|\$request\b|\$req\b|superglobal|\$_(?:GET|POST|REQUEST|COOKIE|FILES|SERVER|ENV)\b)/i;
+const phpBareVariablePattern = /(?:^|[^:])\$[A-Za-z_][A-Za-z0-9_]*(?:->\w+)?/;
+const phpBindingPattern = /,\s*\[[^\]]*\]/;
+const phpPlaceholderPattern = /\?/;
 
 export const sqlInjectionRule: AuditRule = {
   id: 'PP002',
@@ -37,11 +41,51 @@ function isPhpSqlInjectionRisk(filePath: string, content: string): boolean {
     return false;
   }
 
-  if (!hasPhpInterpolationOrConcatenation(content)) {
+  const sqlArguments = extractPhpSqlArguments(content);
+  if (!sqlArguments) {
+    return false;
+  }
+
+  if (isPhpSafeSqlPattern(filePath, sqlArguments, content)) {
+    return false;
+  }
+
+  if (!hasPhpInterpolationOrConcatenation(sqlArguments)) {
     return false;
   }
 
   return true;
+}
+
+function isPhpSafeSqlPattern(filePath: string, sqlArguments: string, content: string): boolean {
+  if (phpInputSourcePattern.test(sqlArguments)) {
+    return false;
+  }
+
+  if (filePath.includes('/database/migrations/') && /DB::statement\s*\(/i.test(content)) {
+    return true;
+  }
+
+  if (phpBindingPattern.test(sqlArguments) || phpPlaceholderPattern.test(sqlArguments)) {
+    return true;
+  }
+
+  if (!phpBareVariablePattern.test(sqlArguments)) {
+    return true;
+  }
+
+  return false;
+}
+
+function extractPhpSqlArguments(content: string): string | null {
+  const openParenIndex = content.indexOf('(');
+  const closeParenIndex = content.lastIndexOf(')');
+
+  if (openParenIndex === -1 || closeParenIndex === -1 || closeParenIndex <= openParenIndex) {
+    return null;
+  }
+
+  return content.slice(openParenIndex + 1, closeParenIndex);
 }
 
 function hasPhpInterpolationOrConcatenation(content: string): boolean {

@@ -20,7 +20,7 @@ export async function main(argv = process.argv.slice(2), runtimeName = process.a
     }
 
     if (options.command === 'version') {
-      console.log('0.2.0');
+      console.log('0.3.0');
       return 0;
     }
 

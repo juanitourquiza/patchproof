@@ -57,10 +57,37 @@ export interface ScanRecord {
   status: string;
   summary: Record<string, number>;
   findings: Array<Record<string, unknown>>;
+  remediations?: RemediationRecord[];
   metadata: Record<string, unknown>;
   report_url: string | null;
   created_at: string | null;
   updated_at: string | null;
+}
+
+export interface AiRemediationResponse {
+  scan_id: number;
+  source: string;
+  provider: string;
+  model: string;
+  note?: string;
+  remediations: RemediationRecord[];
+}
+
+export interface RemediationAction {
+  title: string;
+  description: string;
+}
+
+export interface RemediationRecord {
+  rule_id: string | null;
+  rule_title: string;
+  finding_title: string;
+  summary: string;
+  source: string;
+  confidence?: string;
+  primary_fix: RemediationAction;
+  alternatives: RemediationAction[];
+  ai_prompt: string;
 }
 
 export interface ApiKeyRecord {
