@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ScanResource;
+use App\Http\Resources\UsageEventResource;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -82,6 +83,12 @@ class ProjectController extends Controller
             ->limit(5)
             ->get();
 
+        $recentUsageEvents = $project->usageEvents()
+            ->with('project')
+            ->latest()
+            ->limit(5)
+            ->get();
+
         return response()->json([
             'data' => [
                 'project' => [
@@ -108,6 +115,7 @@ class ProjectController extends Controller
                 ],
                 'latest_scan_at' => $scans->first()?->created_at?->toIso8601String(),
                 'recent_scans' => ScanResource::collection($recentScans)->toArray($request),
+                'recent_usages' => UsageEventResource::collection($recentUsageEvents)->toArray($request),
             ],
         ]);
     }

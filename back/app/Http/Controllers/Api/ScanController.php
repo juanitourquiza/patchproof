@@ -76,6 +76,20 @@ class ScanController extends Controller
             'report_url' => $validated['report_url'] ?? null,
         ]);
 
+        $project->usageEvents()->create([
+            'scan_id' => $scan->id,
+            'kind' => 'scan',
+            'source' => $scan->source,
+            'language' => $scan->language,
+            'fail_on' => $scan->fail_on,
+            'format' => $scan->format,
+            'status' => $scan->status,
+            'findings_total' => (int) data_get($validated, 'summary.total', count($validated['findings'] ?? [])),
+            'metadata' => array_merge($validated['metadata'] ?? [], [
+                'report_url' => $scan->report_url,
+            ]),
+        ]);
+
         return response()->json([
             'data' => new ScanResource($scan->load('project')),
         ], 201);

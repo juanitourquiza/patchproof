@@ -1,0 +1,11 @@
+diff --git a/package.json b/package.json
+--- a/package.json
++++ b/package.json
+@@ -1,6 +1,8 @@
+ {
+   "dependencies": {
+-    "lodash": "^4.17.21"
++    "lodash": "4.17.15",
++    "moment": "2.29.1"
+   }
+ }

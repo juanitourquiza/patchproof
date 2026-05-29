@@ -8,6 +8,7 @@ import {
   ProjectRecord,
   ProjectSummaryResponse,
   ScanRecord,
+  UsageEventRecord,
 } from './patchproof.types';
 
 type StatusTone = 'ok' | 'warn' | 'danger' | 'neutral';
@@ -39,6 +40,7 @@ export class App implements OnInit {
   protected readonly selectedProjectId = signal<number | null>(null);
   protected readonly projectSummary = signal<ProjectSummaryResponse | null>(null);
   protected readonly projectScans = signal<ScanRecord[]>([]);
+  protected readonly projectUsageEvents = signal<UsageEventRecord[]>([]);
   protected readonly selectedScanId = signal<number | null>(null);
   protected readonly projectApiKeys = signal<ApiKeyRecord[]>([]);
   protected readonly projectApiKeysError = signal<string | null>(null);
@@ -180,6 +182,32 @@ export class App implements OnInit {
     return scan.project ? `${scan.project.name} · ${scan.project.slug}` : 'Unknown repository';
   }
 
+  protected usageLabel(event: UsageEventRecord): string {
+    return `${event.kind}${event.source ? ` · ${event.source}` : ''}`;
+  }
+
+  protected usageSummary(event: UsageEventRecord): string {
+    const findings = Number(event.findings_total ?? 0);
+    const scanRef = event.scan_id ? `#${event.scan_id}` : 'scan';
+    const language = event.language ? ` · ${event.language}` : '';
+    const severity = event.fail_on ? ` · fail on ${event.fail_on}` : '';
+
+    return `${scanRef}${language}${severity} · ${findings} finding${findings === 1 ? '' : 's'}`;
+  }
+
+  protected usageTone(event: UsageEventRecord): StatusTone {
+    switch (event.status) {
+      case 'completed':
+        return 'ok';
+      case 'failed':
+        return 'danger';
+      case 'queued':
+        return 'warn';
+      default:
+        return 'neutral';
+    }
+  }
+
   protected scanFindingSummary(scan: ScanRecord): string {
     const total = this.scanFindingTotal(scan);
     const critical = this.scanSeverityCount(scan, 'critical');
@@ -298,6 +326,7 @@ export class App implements OnInit {
       } else {
         this.projectSummary.set(null);
         this.projectScans.set([]);
+        this.projectUsageEvents.set([]);
         this.projectApiKeys.set([]);
         this.projectApiKeysError.set(null);
       }
@@ -321,6 +350,7 @@ export class App implements OnInit {
 
       this.projectSummary.set(summary);
       this.projectScans.set(summary.recent_scans);
+      this.projectUsageEvents.set(summary.recent_usages ?? []);
       const preservedScanId = this.selectedScanId();
       const nextSelectedScanId =
         summary.recent_scans.find((scan) => scan.id === preservedScanId)?.id ??

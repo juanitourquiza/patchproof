@@ -1,6 +1,6 @@
 {
   "name": "patchproof-monorepo",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Local-first security review for AI-generated diffs.",
   "license": "MIT",

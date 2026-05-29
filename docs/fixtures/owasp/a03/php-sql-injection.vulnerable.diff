@@ -1,0 +1,15 @@
+diff --git a/app/Repositories/PostRepository.php b/app/Repositories/PostRepository.php
+--- a/app/Repositories/PostRepository.php
++++ b/app/Repositories/PostRepository.php
+@@ -580,3 +580,6 @@
+             }
+
++            $query->orderByRaw("CASE WHEN post.status = " . KPost::STATUS_PENDING_REVIEW . " THEN 0 ELSE 1 END, post.created_at DESC");
+
+diff --git a/app/Repositories/ChatRepository.php b/app/Repositories/ChatRepository.php
+--- a/app/Repositories/ChatRepository.php
++++ b/app/Repositories/ChatRepository.php
+@@ -138,3 +138,4 @@
+         return $filter->executeWithQuery(function($query) use ($accountId) {
++            $query->selectRaw('(SELECT ' . $accountId . ') AS me_account_id');
+         });

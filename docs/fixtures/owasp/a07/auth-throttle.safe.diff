@@ -1,0 +1,8 @@
+diff --git a/routes/api.php b/routes/api.php
+--- a/routes/api.php
++++ b/routes/api.php
+@@ -1,4 +1,4 @@
+-Route::post('/oauth/token', ['uses' => \Tots\Auth\Http\Controllers\Basic\LoginController::class . '@login']);
+-Route::post('/oauth/social', ['uses' => \App\Http\Controllers\UserController::class . '@social']);
++Route::post('/oauth/token', ['middleware' => ['throttle:5,1'], 'uses' => \Tots\Auth\Http\Controllers\Basic\LoginController::class . '@login']);
++Route::post('/oauth/social', ['middleware' => ['throttle:5,1'], 'uses' => \App\Http\Controllers\UserController::class . '@social']);

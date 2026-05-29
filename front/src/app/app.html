@@ -182,6 +182,34 @@
                   }
                 </div>
               </div>
+              <div class="mini-panel">
+                <div class="mini-panel__title">Tool usage log</div>
+                @if (projectUsageEvents().length === 0) {
+                  <div class="state state-compact">
+                    <strong>No usage events yet</strong>
+                    <p>Each submitted scan will appear here as an auditable tool usage record.</p>
+                  </div>
+                } @else {
+                  <div class="finding-list">
+                    @for (event of projectUsageEvents(); track event.id) {
+                      <article class="finding-card">
+                        <div class="finding-card__head">
+                          <div>
+                            <strong>{{ usageLabel(event) }}</strong>
+                            <span>{{ usageSummary(event) }}</span>
+                          </div>
+                          <span class="chip" [ngClass]="usageTone(event)">
+                            {{ event.status || 'recorded' }}
+                          </span>
+                        </div>
+                        <p class="detail-copy">
+                          {{ event.created_at ? (event.created_at | date: 'short') : 'n/a' }}
+                        </p>
+                      </article>
+                    }
+                  </div>
+                }
+              </div>
             </div>
           </section>
 
@@ -208,21 +236,11 @@
                       {{ scanFindingTotal(scan) }} findings
                     </span>
                   </div>
-                  <div class="reviewed-project">
-                    <span class="reviewed-project__label">Reviewed project</span>
+                  <section class="result-hero">
+                    <span class="result-hero__label">Reviewed project</span>
                     <strong>{{ selectedProjectLabel() }}</strong>
-                  </div>
-                  <p class="detail-copy detail-summary">
-                    {{ scanFindingSummary(scan) }} detected in {{ scanRepositoryLabel(scan) }}.
-                  </p>
-                  @if (scan.report_url) {
-                    <p class="detail-copy">
-                      Report:
-                      <a [href]="scan.report_url" target="_blank" rel="noreferrer">
-                        {{ scan.report_url }}
-                      </a>
-                    </p>
-                  }
+                    <p>{{ scanFindingSummary(scan) }} detected in this scan.</p>
+                  </section>
                 </div>
 
                 <div class="mini-panel">
@@ -262,14 +280,13 @@
                   }
                 </div>
 
-                <div class="mini-panel">
-                  <div class="mini-panel__title">Technical metadata</div>
+                <details class="mini-panel advanced-panel">
+                  <summary>Advanced metadata</summary>
                   <p class="detail-copy detail-meta-copy">
-                    Extra report context used for debugging or integrations. This is secondary information,
-                    not the main result.
+                    Extra report context for debugging or integrations. This is not the main result.
                   </p>
                   <pre class="json-block">{{ scan.metadata | json }}</pre>
-                </div>
+                </details>
               </div>
             } @else {
               <div class="state state-compact">

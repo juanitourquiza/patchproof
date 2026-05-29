@@ -1,0 +1,11 @@
+diff --git a/app/Services/SignatureService.php b/app/Services/SignatureService.php
+--- a/app/Services/SignatureService.php
++++ b/app/Services/SignatureService.php
+@@ -0,0 +1,8 @@
++<?php
++
++class SignatureService
++{
++    public function fingerprint(string $value): string { return md5($value); }
++    public function token(string $value): string { return hash('sha1', $value); }
++}

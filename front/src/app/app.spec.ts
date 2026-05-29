@@ -11,7 +11,7 @@ const apiMock = {
     Promise.resolve({
       ok: true,
       service: 'patchproof-back',
-      version: '0.1.0',
+      version: '0.2.0',
     }),
   listProjects: () =>
     Promise.resolve({

@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\ProjectController;
 use App\Http\Controllers\Api\ProjectApiKeyController;
+use App\Http\Controllers\Api\UsageEventController;
 use App\Http\Controllers\Api\ScanController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,3 +21,5 @@ Route::delete('/projects/{project}/api-keys/{apiKey}', [ProjectApiKeyController:
 Route::get('/scans', [ScanController::class, 'index']);
 Route::get('/scans/{scan}', [ScanController::class, 'show']);
 Route::post('/scans', [ScanController::class, 'store']);
+Route::get('/usage-events', [UsageEventController::class, 'index']);
+Route::post('/projects/{project}/usage-events', [UsageEventController::class, 'store']);

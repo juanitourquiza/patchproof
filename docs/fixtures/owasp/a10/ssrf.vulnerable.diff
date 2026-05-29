@@ -1,0 +1,14 @@
+diff --git a/app/Http/Controllers/Api/ProxyController.php b/app/Http/Controllers/Api/ProxyController.php
+--- a/app/Http/Controllers/Api/ProxyController.php
++++ b/app/Http/Controllers/Api/ProxyController.php
+@@ -0,0 +1,9 @@
++<?php
++
++use Illuminate\Http\Request;
++use Illuminate\Support\Facades\Http;
++
++class ProxyController
++{
++    public function fetch(Request $request) { return Http::get($request->input('url')); }
++    public function fetchRemote(Request $request) { return file_get_contents($request->get('target')); }
++}

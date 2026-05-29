@@ -28,6 +28,23 @@ export interface ProjectSummaryResponse {
   };
   latest_scan_at: string | null;
   recent_scans: ScanRecord[];
+  recent_usages: UsageEventRecord[];
+}
+
+export interface UsageEventRecord {
+  id: number;
+  project?: Pick<ProjectRecord, 'id' | 'name' | 'slug'>;
+  scan_id: number | null;
+  kind: string;
+  source: string;
+  language: string | null;
+  fail_on: string | null;
+  format: string | null;
+  status: string | null;
+  findings_total: number;
+  metadata: Record<string, unknown>;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface ScanRecord {

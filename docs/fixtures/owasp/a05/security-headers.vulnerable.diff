@@ -1,0 +1,16 @@
+diff --git a/config/security.php b/config/security.php
+--- a/config/security.php
++++ b/config/security.php
+@@ -1,6 +1,6 @@
+ return [
+-    'x_frame_options' => 'SAMEORIGIN',
+-    'x_content_type_options' => 'nosniff',
+-    'referrer_policy' => 'no-referrer',
+-    'strict_transport_security' => 'max-age=15552000; includeSubDomains',
+-    'content_security_policy' => "default-src 'self'; img-src 'self' data:;",
++    'x_frame_options' => 'ALLOWALL',
++    'x_content_type_options' => '',
++    'referrer_policy' => 'unsafe-url',
++    'strict_transport_security' => 'max-age=0',
++    'content_security_policy' => "default-src *; script-src 'unsafe-inline' 'unsafe-eval';",
+ ];

@@ -136,7 +136,7 @@ class PatchProofApiTest extends TestCase
             'key_hash' => hash('sha256', 'plain-project-key'),
         ]);
 
-        $this->withHeader('X-PatchProof-Key', 'plain-project-key')
+        $response = $this->withHeader('X-PatchProof-Key', 'plain-project-key')
             ->postJson('/api/scans', [
                 'project_id' => $project->id,
                 'language' => 'es',
@@ -163,14 +163,35 @@ class PatchProofApiTest extends TestCase
             ->assertJsonPath('data.summary.total', 2)
             ->assertJsonPath('data.findings.0.ruleId', 'PP001');
 
+        $scanId = $response->json('data.id');
+
         $this->assertDatabaseHas('project_api_keys', [
             'id' => $apiKey->id,
             'last_used_at' => now()->toDateTimeString(),
         ]);
 
+        $this->assertDatabaseHas('usage_events', [
+            'project_id' => $project->id,
+            'scan_id' => $scanId,
+            'kind' => 'scan',
+            'source' => 'cli',
+            'language' => 'es',
+            'fail_on' => 'high',
+            'format' => 'markdown',
+            'status' => 'completed',
+            'findings_total' => 2,
+        ]);
+
         $this->getJson("/api/projects/{$project->id}/scans")
             ->assertOk()
             ->assertJsonCount(1, 'data');
+
+        $this->getJson('/api/usage-events?project_id='.$project->id)
+            ->assertOk()
+            ->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.project.id', $project->id)
+            ->assertJsonPath('data.0.scan_id', $scanId)
+            ->assertJsonPath('data.0.kind', 'scan');
     }
 
     public function test_scan_creation_rejects_key_for_other_project(): void
@@ -350,6 +371,7 @@ class PatchProofApiTest extends TestCase
             ->assertJsonPath('data.breakdowns.sources.1.source', 'github-action')
             ->assertJsonPath('data.breakdowns.severities.0.severity', 'critical')
             ->assertJsonPath('data.breakdowns.severities.0.count', 1)
-            ->assertJsonCount(2, 'data.recent_scans');
+            ->assertJsonCount(2, 'data.recent_scans')
+            ->assertJsonCount(2, 'data.recent_usages');
     }
 }

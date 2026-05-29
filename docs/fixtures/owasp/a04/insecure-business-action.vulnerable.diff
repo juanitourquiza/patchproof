@@ -1,0 +1,11 @@
+diff --git a/app/Http/Controllers/BillingController.php b/app/Http/Controllers/BillingController.php
+--- a/app/Http/Controllers/BillingController.php
++++ b/app/Http/Controllers/BillingController.php
+@@ -0,0 +1,8 @@
++<?php
++
++class BillingController
++{
++    public function refund($id) { return $this->billingService->refund($id); }
++    public function publish($postId) { return $this->postService->publish($postId); }
++}

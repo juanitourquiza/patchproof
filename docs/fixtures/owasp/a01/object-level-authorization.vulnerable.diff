@@ -1,0 +1,8 @@
+diff --git a/routes/api.php b/routes/api.php
+--- a/routes/api.php
++++ b/routes/api.php
+@@ -1,3 +1,5 @@
+ // Mutating routes with IDs
++Route::post('/algorithm/posts/{post_id}', ['uses' => \App\Http\Controllers\AlgorithmController::class . '@rating']);
++Route::put('/video/jobs/{jobId}/status', ['uses' => \App\Http\Controllers\VideoController::class . '@update']);
++Route::post('/accounts/{account_id}/posts', ['middleware' => ['auth', 'account', 'account-me'], 'uses' => \App\Http\Controllers\PostController::class . '@store']);

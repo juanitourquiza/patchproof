@@ -1,0 +1,11 @@
+diff --git a/app/Tasks/InvitationAcceptedTask.php b/app/Tasks/InvitationAcceptedTask.php
+--- a/app/Tasks/InvitationAcceptedTask.php
++++ b/app/Tasks/InvitationAcceptedTask.php
+@@ -0,0 +1,8 @@
++<?php
++
++class InvitationAcceptedTask
++{
++    public function run() { try { $this->notify(); } catch (\Throwable $th) {} }
++    public function sync() { try { $this->syncRemote(); } catch (\Exception $e) { } }
++}

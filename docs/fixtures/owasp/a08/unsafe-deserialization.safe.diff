@@ -1,0 +1,11 @@
+diff --git a/app/Services/TokenStore.php b/app/Services/TokenStore.php
+--- a/app/Services/TokenStore.php
++++ b/app/Services/TokenStore.php
+@@ -0,0 +1,8 @@
++<?php
++
++class TokenStore
++{
++    public function load(string $payload): mixed { return json_decode($payload, true); }
++    public function fromRequest(Request $request): mixed { return json_decode($request->input('payload'), true); }
++}

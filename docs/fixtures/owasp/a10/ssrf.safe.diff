@@ -1,0 +1,13 @@
+diff --git a/app/Http/Controllers/Api/ProxyController.php b/app/Http/Controllers/Api/ProxyController.php
+--- a/app/Http/Controllers/Api/ProxyController.php
++++ b/app/Http/Controllers/Api/ProxyController.php
+@@ -0,0 +1,9 @@
++<?php
++
++use Illuminate\Support\Facades\Http;
++
++class ProxyController
++{
++    public function ping() { return Http::get('https://api.example.com/health'); }
++    public function fetchDocs() { return file_get_contents('https://docs.example.com/status'); }
++}

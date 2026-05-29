@@ -1,0 +1,10 @@
+diff --git a/.env.example b/.env.example
+--- a/.env.example
++++ b/.env.example
+@@ -1,3 +1,4 @@
+ LOG_LEVEL=warning
+diff --git a/config/logging.php b/config/logging.php
+--- a/config/logging.php
++++ b/config/logging.php
+@@ -1,5 +1,5 @@
+             'level' => env('LOG_LEVEL', 'warning'),

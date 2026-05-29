@@ -29,4 +29,9 @@ class Project extends Model
     {
         return $this->hasMany(ProjectApiKey::class);
     }
+
+    public function usageEvents(): HasMany
+    {
+        return $this->hasMany(UsageEvent::class);
+    }
 }

@@ -1,0 +1,8 @@
+diff --git a/routes/api.php b/routes/api.php
+--- a/routes/api.php
++++ b/routes/api.php
+@@ -1,4 +1,4 @@
+-Route::post('/emails/codes/validations', ['uses' => \App\Http\Controllers\EmailController::class . '@codeValidation']);
+-Route::post('/phones/codes/validations', ['uses' => \App\Http\Controllers\PhoneController::class . '@codeValidation']);
++Route::post('/emails/codes/validations', ['uses' => \App\Http\Controllers\EmailController::class . '@codeValidation']);
++Route::post('/phones/codes/validations', ['uses' => \App\Http\Controllers\PhoneController::class . '@codeValidation']);

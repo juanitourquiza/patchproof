@@ -10,6 +10,7 @@ import {
   ProjectSummaryEnvelope,
   ProjectSummaryResponse,
   ScanListResponse,
+  UsageEventRecord,
 } from './patchproof.types';
 import { environment } from '../environments/environment';
 
@@ -64,6 +65,20 @@ export class PatchProofApiService {
     return firstValueFrom(
       this.http.delete<void>(`${this.baseUrl}/projects/${projectId}/api-keys/${apiKeyId}`, {
         headers: this.buildAdminHeaders(adminKey),
+      })
+    );
+  }
+
+  listUsageEvents(params: Record<string, string | number> = {}): Promise<{ data: UsageEventRecord[] }> {
+    let httpParams = new HttpParams();
+
+    for (const [key, value] of Object.entries(params)) {
+      httpParams = httpParams.set(key, String(value));
+    }
+
+    return firstValueFrom(
+      this.http.get<{ data: UsageEventRecord[] }>(`${this.baseUrl}/usage-events`, {
+        params: httpParams,
       })
     );
   }
