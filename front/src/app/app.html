@@ -479,9 +479,9 @@
                     </div>
                   }
                 </div>
-                <span class="meta">
-                  Scan ID: {{ selectedScan() ? '#' + selectedScan()!.id : '—' }}
-                </span>
+                @if (selectedScan(); as scan) {
+                  <span class="meta">Scan ID: #{{ scan.id }}</span>
+                }
                 <span class="meta">
                   {{ refreshedAt() ? (refreshedAt() | date: 'mediumTime') : 'now' }}
                 </span>
