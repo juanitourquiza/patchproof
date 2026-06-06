@@ -1,6 +1,7 @@
 import { DatePipe, JsonPipe, NgClass } from '@angular/common';
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 
+import { loadUiLocale, saveUiLocale, uiCopy, type UiLocale } from './app-i18n';
 import { PatchProofApiService } from './patchproof-api.service';
 import {
   defaultReportFileName,
@@ -59,6 +60,8 @@ const FINDING_LABELS: Record<string, string> = {
 })
 export class App implements OnInit {
   private readonly api = inject(PatchProofApiService);
+  protected readonly locale = signal<UiLocale>(loadUiLocale());
+  protected readonly ui = computed(() => uiCopy(this.locale()));
 
   protected readonly loading = signal(true);
   protected readonly loadingProject = signal(false);
@@ -121,19 +124,21 @@ export class App implements OnInit {
   );
 
   protected readonly aiReviewStatus = computed(() => {
+    const copy = this.ui();
+
     if (this.aiReviewError()) {
       return {
-        label: 'AI error',
+        label: copy.messages.aiReviewError,
         tone: 'danger' as StatusTone,
-        detail: this.aiReviewError() ?? 'AI request failed.',
+        detail: this.aiReviewError() ?? copy.messages.aiReviewError,
       };
     }
 
     if (this.aiReviewLoading()) {
       return {
-        label: 'Checking…',
+        label: copy.review.generating,
         tone: 'neutral' as StatusTone,
-        detail: 'AI review request is in progress.',
+        detail: copy.review.generating,
       };
     }
 
@@ -141,7 +146,7 @@ export class App implements OnInit {
 
     if (review?.source === 'ai') {
       return {
-        label: 'AI connected',
+        label: copy.app.connected,
         tone: 'ok' as StatusTone,
         detail: `${review.provider} · ${review.model}`,
       };
@@ -149,29 +154,30 @@ export class App implements OnInit {
 
     if (review?.source === 'deterministic') {
       return {
-        label: 'AI fallback',
+        label: copy.messages.aiReviewFallback,
         tone: 'warn' as StatusTone,
-        detail: review.note || 'Using deterministic fallback output.',
+        detail: review.note || copy.messages.aiReviewFallback,
       };
     }
 
     if (this.aiSettings()?.configured) {
       return {
-        label: 'AI ready',
+        label: copy.review.ai,
         tone: 'neutral' as StatusTone,
         detail: `${this.aiSettings()?.provider || 'openai'} · ${this.aiSettings()?.model || 'gpt-4.1-mini'}`,
       };
     }
 
     return {
-      label: 'AI not configured',
+      label: copy.review.aiNotConfigured,
       tone: 'warn' as StatusTone,
-      detail: 'Configure a provider in Settings to enable AI review.',
+      detail: copy.review.aiNotConfigured,
     };
   });
 
   protected readonly aiReviewCallLabel = computed(() => {
     const call = this.aiReviewCallStatus();
+    const copy = this.ui();
 
     if (!call) {
       return null;
@@ -182,7 +188,7 @@ export class App implements OnInit {
     return {
       label,
       tone: call.state === 'success' ? ('ok' as StatusTone) : call.state === 'fallback' ? ('warn' as StatusTone) : ('danger' as StatusTone),
-      detail: call.detail,
+      detail: call.detail || copy.review.aiReviewAdvisory,
       at: call.at,
       provider: call.provider,
       model: call.model,
@@ -207,6 +213,15 @@ export class App implements OnInit {
     }
 
     await this.loadDashboard();
+  }
+
+  protected setLocale(locale: UiLocale): void {
+    if (this.locale() === locale) {
+      return;
+    }
+
+    this.locale.set(locale);
+    saveUiLocale(locale);
   }
 
   protected async refresh(): Promise<void> {
@@ -237,7 +252,7 @@ export class App implements OnInit {
       this.createProjectSlugDraft.set('');
       this.createProjectDialogOpen.set(false);
       await this.loadDashboard(response.data.id);
-      this.actionMessage.set(`Project "${response.data.name}" created.`);
+      this.actionMessage.set(this.ui().messages.projectCreated(response.data.name));
     } catch (error) {
       this.createProjectError.set(this.toErrorMessage(error));
     } finally {
@@ -303,7 +318,7 @@ export class App implements OnInit {
 
   protected async deleteProject(project: ProjectRecord): Promise<void> {
     if (project.id === this.demoProjectId) {
-      this.actionMessage.set('The demo project is mock data and cannot be deleted.');
+      this.actionMessage.set(this.ui().messages.demoLocked);
       return;
     }
 
@@ -326,7 +341,7 @@ export class App implements OnInit {
 
       const nextSelectedProjectId = this.selectedProjectId() === project.id ? null : this.selectedProjectId();
       await this.loadDashboard(nextSelectedProjectId);
-      this.actionMessage.set(`Project "${project.name}" deleted.`);
+      this.actionMessage.set(this.ui().messages.projectDeleted(project.name));
     } catch (error) {
       this.error.set(this.toErrorMessage(error));
     } finally {
@@ -347,7 +362,7 @@ export class App implements OnInit {
 
     const parsed = this.parseScanPayload();
     if (!parsed) {
-      this.submitScanError.set('The scan payload must be valid JSON.');
+      this.submitScanError.set(this.ui().messages.scanPayloadInvalid);
       return;
     }
 
@@ -368,7 +383,7 @@ export class App implements OnInit {
         report_url: parsed.report_url ?? null,
       });
 
-      this.actionMessage.set(`Scan #${response.data.id} uploaded for ${project.name}.`);
+      this.actionMessage.set(this.ui().messages.scanUploaded(response.data.id, project.name));
       await this.loadProject(project.id);
       this.selectScan(response.data.id);
     } catch (error) {
@@ -428,7 +443,7 @@ export class App implements OnInit {
     this.applyDemoProjectState(demo);
     this.loading.set(false);
     this.loadingProject.set(false);
-    this.actionMessage.set('Loaded a local mock project with a dense issue set for previewing reports.');
+    this.actionMessage.set(this.ui().messages.demoLoadedPreview);
   }
 
   protected async selectProject(projectId: number): Promise<void> {
@@ -438,7 +453,7 @@ export class App implements OnInit {
       this.applyDemoProjectState(this.createDemoProjectState());
       this.actionsMenuOpen.set(false);
       this.reportMenuOpen.set(false);
-      this.actionMessage.set('Loaded the mock project with sample issues.');
+      this.actionMessage.set(this.ui().messages.demoLoaded);
       return;
     }
 
@@ -501,7 +516,7 @@ export class App implements OnInit {
         response.data.source === 'ai' ? 'success' : 'fallback',
         response.data.source === 'ai'
           ? `Connected to ${response.data.provider} · ${response.data.model}`
-          : response.data.note || 'Using deterministic fallback output.',
+          : response.data.note || this.ui().messages.aiReviewFallback,
         response.data.provider,
         response.data.model,
         scan.id
@@ -534,17 +549,18 @@ export class App implements OnInit {
       const exportScan = this.reportScanFromCurrentSelection(scan);
       const format = formatOverride ?? this.reportFormatDraft();
       const aiReview = this.aiReview();
+      const language = this.locale();
       this.reportFormatDraft.set(format);
       const fileName = defaultReportFileName(exportScan, format);
 
       if (format === 'pdf') {
-        saveScanReportPdf(exportScan, fileName, 'en', aiReview);
+        saveScanReportPdf(exportScan, fileName, language, aiReview);
       } else {
-        const content = formatScanReport(exportScan, format, 'en', aiReview);
+        const content = formatScanReport(exportScan, format, language, aiReview);
         this.downloadReport(fileName, content, format);
       }
 
-      this.actionMessage.set(`Report exported as ${fileName}.`);
+      this.actionMessage.set(this.ui().messages.reportExported(fileName));
       this.reportMenuOpen.set(false);
     } catch (error) {
       this.exportReportError.set(this.toErrorMessage(error));
@@ -579,7 +595,7 @@ export class App implements OnInit {
 
       this.applyAiSettings(response.data);
       this.aiApiKeyDraft.set('');
-      this.actionMessage.set(`AI provider saved: ${response.data.provider}.`);
+      this.actionMessage.set(this.ui().messages.aiProviderSaved(response.data.provider));
     } catch (error) {
       this.aiSettingsError.set(this.toErrorMessage(error));
     } finally {
@@ -606,7 +622,7 @@ export class App implements OnInit {
 
       this.applyAiSettings(response.data);
       this.aiApiKeyDraft.set('');
-      this.actionMessage.set('Saved AI key cleared. Using .env or no-provider fallback now.');
+      this.actionMessage.set(this.ui().messages.aiKeyCleared);
     } catch (error) {
       this.aiSettingsError.set(this.toErrorMessage(error));
     } finally {
@@ -679,18 +695,24 @@ export class App implements OnInit {
 
   protected scanResult(scan: ScanRecord): ScanResultRecord {
     const result = scan.result;
-
-    if (result) {
-      return result;
-    }
-
     const counts = this.scanSeverityCounts(scan);
     const findingTotal = Math.max(
       this.scanFindingTotal(scan),
       counts.critical + counts.high + counts.medium + counts.low
     );
-    const score = this.calculateScanScore(counts, findingTotal);
-    const verdict = this.verdictForScore(score, findingTotal);
+    const verdict = result?.verdict ?? this.verdictForScore(result?.score ?? this.calculateScanScore(counts, findingTotal), findingTotal);
+    const score = result?.score ?? this.calculateScanScore(counts, findingTotal);
+    const severity = result?.severity ?? this.worstResultSeverity(counts);
+
+    if (result) {
+      return {
+        ...result,
+        label: this.labelForVerdict(verdict),
+        summary: this.resultSummaryFor(findingTotal, counts, verdict),
+        recommendation: this.resultRecommendationFor(verdict, findingTotal),
+        severity,
+      };
+    }
 
     return {
       score,
@@ -764,7 +786,7 @@ export class App implements OnInit {
   }
 
   protected scanRepositoryLabel(scan: ScanRecord): string {
-    return scan.project ? `${scan.project.name} · ${scan.project.slug}` : 'Unknown repository';
+    return scan.project ? `${scan.project.name} · ${scan.project.slug}` : (this.locale() === 'es' ? 'Repositorio desconocido' : 'Unknown repository');
   }
 
   protected usageLabel(event: UsageEventRecord): string {
@@ -773,11 +795,13 @@ export class App implements OnInit {
 
   protected usageSummary(event: UsageEventRecord): string {
     const findings = Number(event.findings_total ?? 0);
-    const scanRef = event.scan_id ? `#${event.scan_id}` : 'scan';
+    const scanRef = event.scan_id ? `#${event.scan_id}` : (this.locale() === 'es' ? 'scan' : 'scan');
     const language = event.language ? ` · ${event.language}` : '';
-    const severity = event.fail_on ? ` · fail on ${event.fail_on}` : '';
+    const severity = event.fail_on
+      ? ` · ${this.locale() === 'es' ? 'fallar en' : 'fail on'} ${event.fail_on}`
+      : '';
 
-    return `${scanRef}${language}${severity} · ${findings} finding${findings === 1 ? '' : 's'}`;
+    return `${scanRef}${language}${severity} · ${findings} ${this.locale() === 'es' ? 'hallazgo' : 'finding'}${findings === 1 ? '' : 's'}`;
   }
 
   protected usageTone(event: UsageEventRecord): StatusTone {
@@ -804,12 +828,13 @@ export class App implements OnInit {
   protected scanFindingSummary(scan: ScanRecord): string {
     const total = this.scanFindingTotal(scan);
     const counts = this.scanSeverityCounts(scan);
+    const findingLabel = this.locale() === 'es' ? 'hallazgo' : 'finding';
 
     return [
-      `${total} finding${total === 1 ? '' : 's'}`,
-      counts.critical > 0 ? `${counts.critical} critical` : null,
-      counts.high > 0 ? `${counts.high} high` : null,
-      counts.medium > 0 ? `${counts.medium} medium` : null,
+      `${total} ${findingLabel}${total === 1 ? '' : 's'}`,
+      counts.critical > 0 ? `${counts.critical} ${this.locale() === 'es' ? 'crítico' : 'critical'}` : null,
+      counts.high > 0 ? `${counts.high} ${this.locale() === 'es' ? 'alto' : 'high'}` : null,
+      counts.medium > 0 ? `${counts.medium} ${this.locale() === 'es' ? 'medio' : 'medium'}` : null,
     ]
       .filter((item): item is string => Boolean(item))
       .join(' · ');
@@ -845,17 +870,18 @@ export class App implements OnInit {
   }
 
   private labelForVerdict(verdict: string): string {
+    const copy = this.ui();
     switch (verdict) {
       case 'clean':
-        return 'Clean result';
+        return copy.result.labels.clean;
       case 'low-risk':
-        return 'Low-risk result';
+        return copy.result.labels.lowRisk;
       case 'moderate':
-        return 'Needs review';
+        return copy.result.labels.moderate;
       case 'high-risk':
-        return 'High-risk result';
+        return copy.result.labels.highRisk;
       default:
-        return 'Security result';
+        return copy.result.labels.security;
     }
   }
 
@@ -864,8 +890,9 @@ export class App implements OnInit {
     counts: { critical: number; high: number; medium: number; low: number },
     verdict: string
   ): string {
+    const copy = this.ui();
     if (findingTotal <= 0) {
-      return 'No findings were recorded. Keep the clean baseline for future comparisons.';
+      return copy.result.summary.noFindings;
     }
 
     const parts = [`${findingTotal} finding${findingTotal === 1 ? '' : 's'}`];
@@ -876,25 +903,39 @@ export class App implements OnInit {
       }
     }
 
-    return `Detected ${parts.join(' · ')} with a ${verdict} result.`;
+    const localizedVerdict =
+      verdict === 'clean'
+        ? copy.result.labels.clean
+        : verdict === 'low-risk'
+          ? copy.result.labels.lowRisk
+          : verdict === 'moderate'
+            ? copy.result.labels.moderate
+            : verdict === 'high-risk'
+              ? copy.result.labels.highRisk
+              : copy.result.labels.security;
+
+    return this.locale() === 'es'
+      ? copy.result.summary.detected(findingTotal, localizedVerdict)
+      : `Detected ${parts.join(' · ')} with a ${verdict} result.`;
   }
 
   private resultRecommendationFor(verdict: string, findingTotal: number): string {
+    const copy = this.ui();
     if (findingTotal <= 0) {
-      return 'No immediate issues were found. Keep the clean result as a baseline and scan again after the next change.';
+      return copy.result.recommendation.noFindings;
     }
 
     switch (verdict) {
       case 'clean':
-        return 'Treat this as a clean-ish result and review the report history after the next change.';
+        return copy.result.recommendation.clean;
       case 'low-risk':
-        return 'Review the highlighted items and rerun the scan after the fixes land.';
+        return copy.result.recommendation.lowRisk;
       case 'moderate':
-        return 'Prioritize the findings and verify the risky code paths before shipping.';
+        return copy.result.recommendation.moderate;
       case 'high-risk':
-        return 'Address the findings before release and rerun the scan until the score improves.';
+        return copy.result.recommendation.highRisk;
       default:
-        return 'Review the scan and compare it against the previous baseline.';
+        return copy.result.recommendation.fallback;
     }
   }
 
@@ -920,7 +961,7 @@ export class App implements OnInit {
       return FINDING_LABELS[ruleId];
     }
 
-    return ruleId || 'Finding';
+    return ruleId || (this.locale() === 'es' ? 'Hallazgo' : 'Finding');
   }
 
   protected findingSeverity(finding: Record<string, unknown>): StatusTone {

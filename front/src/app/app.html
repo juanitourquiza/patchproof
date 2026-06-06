@@ -16,8 +16,8 @@
     <aside class="panel sidebar" [class.sidebar--collapsed]="sidebarCollapsed()">
       <div class="sidebar-brand">
         <div>
-          <p class="eyebrow">PatchProof</p>
-          <strong>Local scan review</strong>
+          <p class="eyebrow">{{ ui().app.title }}</p>
+          <strong>{{ ui().app.subtitle }}</strong>
         </div>
         <button
           type="button"
@@ -27,6 +27,11 @@
         >
           «
         </button>
+      </div>
+
+      <div class="locale-switch" aria-label="Language switcher">
+        <button type="button" class="chip" [class.active]="locale() === 'en'" (click)="setLocale('en')">EN</button>
+        <button type="button" class="chip" [class.active]="locale() === 'es'" (click)="setLocale('es')">ES</button>
       </div>
 
       @if (sidebarCollapsed()) {
@@ -101,25 +106,25 @@
 
       <button type="button" class="button sidebar-primary" (click)="openNewProjectForm()">
         <span>+</span>
-        New project
+        {{ ui().sidebar.newProject }}
       </button>
 
       <div class="panel-head">
-        <div>
-          <h2>Projects</h2>
-          <p>{{ projects().length }} tracked projects</p>
-        </div>
+          <div>
+          <h2>{{ ui().sidebar.projects }}</h2>
+          <p>{{ ui().sidebar.trackedProjects(projects().length) }}</p>
+          </div>
         @if (health()) {
           <span class="meta">v{{ health()?.version }}</span>
         }
       </div>
 
       @if (loading()) {
-        <div class="state state-loading">Loading projects...</div>
+        <div class="state state-loading">{{ ui().sidebar.loadingProjects }}</div>
       } @else if (projects().length === 0) {
         <div class="state">
-          <strong>No projects yet</strong>
-          <p>Create a local project to start tracking scans.</p>
+          <strong>{{ ui().sidebar.noProjectsTitle }}</strong>
+          <p>{{ ui().sidebar.noProjectsBody }}</p>
         </div>
       } @else {
         <div class="project-list" id="project-list-anchor" role="list">
@@ -165,10 +170,10 @@
                 >
                   {{
                     isDemoProject(project)
-                      ? 'Demo'
+                      ? ui().project.demo
                       : deletingProjectId() === project.id
-                        ? 'Deleting…'
-                        : 'Delete'
+                        ? ui().project.deleting
+                        : ui().project.delete
                   }}
                 </button>
               </div>
@@ -177,14 +182,14 @@
         </div>
       }
 
-      <nav class="sidebar-nav" aria-label="Workspace">
+      <nav class="sidebar-nav" [attr.aria-label]="ui().sidebar.workspace">
         <button
           type="button"
           class="sidebar-nav__item"
           [class.active]="sidebarSection() === 'projects'"
           (click)="activateSidebarSection('projects')"
         >
-          Projects
+          {{ ui().sidebar.projects }}
         </button>
         <button
           type="button"
@@ -214,18 +219,18 @@
 
       <details class="sidebar-tools" [open]="sidebarToolsOpen()" id="ai-settings-anchor">
         <summary>
-          Workspace tools
+          {{ ui().sidebar.workspaceTools }}
         </summary>
 
         <div class="sidebar-tools__body">
           <div class="tool-card tool-card--compact">
             <div class="panel-head">
               <div>
-                <h2>AI provider</h2>
-                <p>Set a provider once and reuse it for review + remediation.</p>
+                <h2>{{ ui().sidebar.aiProvider }}</h2>
+                <p>{{ ui().sidebar.aiProviderHelp }}</p>
               </div>
               <span class="meta">
-                {{ aiSettings()?.source === 'database' ? 'Saved locally' : 'From .env' }}
+                {{ aiSettings()?.source === 'database' ? ui().sidebar.savedLocally : ui().sidebar.fromEnv }}
               </span>
             </div>
 
@@ -358,7 +363,7 @@
     <section class="main-column">
       @if (loadingProject()) {
         <section class="panel">
-          <div class="state state-loading">Loading project details...</div>
+          <div class="state state-loading">{{ ui().project.loadingDetails }}</div>
         </section>
       } @else if (selectedProject(); as project) {
         @if (projectSummary(); as summary) {
@@ -366,7 +371,7 @@
             <div class="project-hero">
               <div class="project-hero__copy">
                 <nav class="breadcrumbs" aria-label="Breadcrumb">
-                  <span>Projects</span>
+                  <span>{{ ui().sidebar.projects }}</span>
                   <span>›</span>
                   <strong>{{ project.name }}</strong>
                 </nav>
@@ -375,29 +380,29 @@
                   <button
                     type="button"
                     class="icon-button"
-                    [attr.aria-label]="'Copy project slug ' + project.slug"
+                    [attr.aria-label]="ui().project.copiedSlug(project.slug)"
                     (click)="copyText(project.slug)"
                   >
                     ⧉
                   </button>
                   @if (isDemoProjectActive()) {
-                    <span class="health-pill warn">Mockup</span>
+                    <span class="health-pill warn">{{ ui().project.mockup }}</span>
                   }
                 </div>
                 <p>
-                  {{ project.slug }} · {{ project.description || 'No description' }}
+                  {{ ui().app.projectSlug(project.slug) }} · {{ project.description || ui().app.noDescription }}
                   ·
                   {{
                     project.latest_scan_at
-                      ? ('Last scan ' + (project.latest_scan_at | date: 'medium'))
-                      : 'No scan recorded yet'
+                      ? ui().app.lastScan((project.latest_scan_at | date: 'medium') || '')
+                      : ui().app.noScanRecorded
                   }}
                 </p>
               </div>
 
               <div class="project-hero__actions">
                 <span class="health-pill" [ngClass]="health()?.ok ? 'ok' : 'warn'">
-                  {{ health()?.ok ? 'Connected' : 'Offline' }}
+                  {{ health()?.ok ? ui().app.connected : ui().app.offline }}
                 </span>
                 <div class="export-menu-wrap">
                   <button
@@ -407,7 +412,7 @@
                     aria-haspopup="menu"
                     (click)="toggleActionsMenu()"
                   >
-                    Actions
+                    {{ ui().app.actions }}
                   </button>
 
                   @if (actionsMenuOpen()) {
@@ -418,7 +423,7 @@
                         role="menuitem"
                         (click)="loadDemoProject()"
                       >
-                        Load mock project
+                        {{ ui().project.loadMockProject }}
                       </button>
                       <button
                         type="button"
@@ -426,7 +431,7 @@
                         role="menuitem"
                         (click)="activateSidebarSection('settings')"
                       >
-                        Open settings
+                        {{ ui().project.openSettings }}
                       </button>
                       <button
                         type="button"
@@ -434,12 +439,12 @@
                         role="menuitem"
                         (click)="refresh()"
                       >
-                        Refresh data
+                        {{ ui().project.refreshData }}
                       </button>
                     </div>
                   }
                 </div>
-                <button type="button" class="button button-ghost" (click)="refresh()">Refresh</button>
+                <button type="button" class="button button-ghost" (click)="refresh()">{{ ui().app.refresh }}</button>
                 <div class="export-menu-wrap">
                   <button
                     type="button"
@@ -517,14 +522,14 @@
               <div class="review-toolbar__actions">
                 <span class="meta">{{ selectedScanLabel() }}</span>
                 @if (selectedScan()) {
-                  <button
-                    type="button"
-                    class="button button-ghost button-mini"
-                    [disabled]="aiReviewLoading()"
-                    (click)="generateAiReview()"
-                  >
-                    {{ aiReviewLoading() ? 'Generating…' : 'Generate AI review' }}
-                  </button>
+                <button
+                  type="button"
+                  class="button button-ghost button-mini"
+                  [disabled]="aiReviewLoading()"
+                  (click)="generateAiReview()"
+                >
+                  {{ aiReviewLoading() ? ui().review.generating : ui().review.generateAiReview }}
+                </button>
                 }
               </div>
             </div>
@@ -540,26 +545,26 @@
             @if (aiReviewMode() === 'ai') {
               <div class="metrics">
                 <article class="metric">
-                  <span class="metric__label">Files reviewed</span>
+                  <span class="metric__label">{{ ui().review.filesReviewed }}</span>
                   <strong class="metric__value">{{ scanFileCount(scan) }}</strong>
-                  <span class="metric__sub">Latest scan context</span>
+                  <span class="metric__sub">{{ ui().review.latestScanContext }}</span>
                 </article>
                 <article class="metric">
-                  <span class="metric__label">Deterministic findings</span>
+                  <span class="metric__label">{{ ui().review.deterministicFindings }}</span>
                   <strong class="metric__value">{{ scanFindingTotal(scan) }}</strong>
                   <span class="metric__sub">
-                    {{ scanFindingTotal(scan) === 0 ? 'No rule matches' : 'Rule matches found' }}
+                    {{ scanFindingTotal(scan) === 0 ? ui().review.noRuleMatches : ui().review.ruleMatchesFound }}
                   </span>
                 </article>
                 <article class="metric">
-                  <span class="metric__label">AI suggestions</span>
+                  <span class="metric__label">{{ ui().review.aiSuggestions }}</span>
                   <strong class="metric__value">{{ aiReview()?.suggestions?.length ?? 0 }}</strong>
                   <span class="metric__sub">
-                    {{ aiReview()?.suggestions?.length ? 'Needs human review' : 'No suggestions yet' }}
+                    {{ aiReview()?.suggestions?.length ? ui().review.needsHumanReview : ui().review.noSuggestionsYet }}
                   </span>
                 </article>
                 <article class="metric">
-                  <span class="metric__label">Confidence avg</span>
+                  <span class="metric__label">{{ ui().review.confidenceAvg }}</span>
                   <strong class="metric__value">{{ aiReview()?.confidence_average || '0.00' }}</strong>
                   <span class="metric__sub">Across all suggestions</span>
                 </article>
@@ -569,10 +574,10 @@
                 <div class="mini-panel diff-panel">
                   <div class="panel-head">
                     <div>
-                      <h2>Changes ({{ scanFileCount(scan) }} files)</h2>
-                      <p>Code review context for AI suggestions.</p>
+                      <h2>{{ ui().review.changes(scanFileCount(scan)) }}</h2>
+                      <p>{{ ui().review.reviewContext }}</p>
                     </div>
-                    <span class="meta">Sort: Changed files</span>
+                    <span class="meta">{{ ui().review.sortChangedFiles }}</span>
                   </div>
 
                   <div class="diff-file">
@@ -581,7 +586,7 @@
                         <strong>{{ scan.project?.slug || project.slug }}</strong>
                         <span>{{ scan.source }} · {{ scan.language }} · {{ scan.format }}</span>
                       </div>
-                      <span class="chip neutral">Review context</span>
+                      <span class="chip neutral">{{ ui().review.reviewContext }}</span>
                     </div>
                     <pre class="diff-block">{{ reviewContextSnippet(scan) }}</pre>
                   </div>
@@ -596,26 +601,26 @@
                 <div class="mini-panel ai-panel">
                   <div class="panel-head">
                     <div>
-                      <h2>AI suggestions ({{ aiReview()?.suggestions?.length ?? 0 }})</h2>
-                      <p>Advisory notes only. Never blocks CI by default.</p>
+                      <h2>{{ ui().review.aiSuggestionsTitle(aiReview()?.suggestions?.length ?? 0) }}</h2>
+                      <p>{{ ui().review.aiReviewAdvisory }}</p>
                     </div>
                     <div class="panel-head__stack">
                       <span class="chip" [ngClass]="aiReviewStatus().tone">{{ aiReviewStatus().label }}</span>
-                      <span class="meta">Sort: Confidence</span>
+                      <span class="meta">{{ ui().review.sortConfidence }}</span>
                     </div>
                   </div>
 
                   @if (aiReviewError()) {
                     <div class="state state-compact">
-                      <strong>AI review failed</strong>
+                      <strong>{{ ui().review.aiReviewFailed }}</strong>
                       <p>{{ aiReviewError() }}</p>
                     </div>
                   } @else if (aiReview(); as review) {
                     @if ((review.source === 'deterministic' || review.note) && !isDemoProjectActive()) {
                       <div class="state state-compact state-warning">
-                        <strong>AI not configured</strong>
+                        <strong>{{ ui().review.aiNotConfigured }}</strong>
                         <p>
-                          {{ review.note || 'No AI provider is configured, so this review is using a deterministic fallback.' }}
+                          {{ review.note || ui().messages.aiReviewFallback }}
                         </p>
                       </div>
                     }
@@ -628,7 +633,7 @@
                       @if (aiReviewCallLabel(); as call) {
                         <div class="ai-status-line ai-status-line--last-call">
                           <span class="chip" [ngClass]="call.tone">
-                            Last AI call · {{ call.label }}
+                            {{ ui().review.lastAiCall(call.label) }}
                           </span>
                           <span class="meta">
                             {{ call.at | date: 'medium' }}
@@ -642,13 +647,13 @@
                         <span class="chip neutral">{{ review.source }}</span>
                         <span class="chip">{{ review.provider }}</span>
                         <span class="chip">{{ review.model }}</span>
-                        <span class="chip warn">Needs human review</span>
+                        <span class="chip warn">{{ ui().review.needsHumanReview }}</span>
                       </div>
                     </div>
 
                     @if (review.suggestions.length === 0) {
                       <div class="state state-compact">
-                        <strong>No AI suggestions returned</strong>
+                        <strong>{{ ui().review.noSuggestionsYet }}</strong>
                         <p>Try a different scan or connect a stronger AI provider prompt.</p>
                       </div>
                     } @else {
@@ -674,7 +679,7 @@
                               <strong>Recommendation:</strong> {{ item.recommendation }}
                             </p>
                             <p class="detail-copy detail-meta-copy">
-                              <span class="chip warn">Needs human review</span>
+                              <span class="chip warn">{{ ui().review.needsHumanReview }}</span>
                             </p>
                           </article>
                         }
@@ -682,7 +687,7 @@
                     }
                   } @else {
                     <div class="state state-compact">
-                      <strong>No AI review yet</strong>
+                      <strong>{{ ui().review.noAiReviewYet }}</strong>
                       <p>Generate AI review to turn this scan into advisory security notes.</p>
                     </div>
                   }
@@ -691,10 +696,10 @@
 
               <div class="deterministic-rail">
                 <div class="mini-panel">
-                  <div class="mini-panel__title">Deterministic findings</div>
+                  <div class="mini-panel__title">{{ ui().review.deterministicFindings }}</div>
                   @if ((scan.findings || []).length === 0) {
                     <div class="state state-compact state-compact--success">
-                      <strong>No rule matches</strong>
+                      <strong>{{ ui().review.noRuleMatches }}</strong>
                       <p>The deterministic scanner did not flag anything in this scan.</p>
                     </div>
                   } @else {
@@ -719,27 +724,27 @@
               </div>
 
               <p class="review-disclaimer">
-                AI suggestions are advisory and never block CI by default.
+                {{ ui().review.aiReviewAdvisory }}
               </p>
               } @else {
                 <div class="detail-grid">
                   <div class="mini-panel">
-                    <div class="mini-panel__title">Overview</div>
+                    <div class="mini-panel__title">{{ ui().result.overview }}</div>
                     <div class="chips">
                       <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
                       <span class="chip">{{ scan.source }}</span>
                       <span class="chip">{{ scan.language }}</span>
                       <span class="chip">{{ scan.format }}</span>
-                      <span class="chip">fail on {{ scan.fail_on }}</span>
+                      <span class="chip">{{ (locale() === 'es' ? 'fallar en' : 'fail on') + ' ' + scan.fail_on }}</span>
                       <span class="chip" [ngClass]="scanResultTone(scan)">
                         {{ scanResultLabel(scan) }}
                       </span>
                       <span class="chip" [ngClass]="severityTone(scanWorstSeverity(scan))">
-                        {{ scanFindingTotal(scan) }} findings
+                        {{ scanFindingTotal(scan) }} {{ locale() === 'es' ? 'hallazgos' : 'findings' }}
                       </span>
                     </div>
                     <section class="result-hero">
-                      <span class="result-hero__label">Reviewed project</span>
+                      <span class="result-hero__label">{{ ui().result.reviewedProject }}</span>
                       <strong>{{ selectedProjectLabel() }}</strong>
                       <p>
                         {{ scanResultSummary(scan) }}
@@ -747,14 +752,14 @@
                     </section>
 
                     <section class="result-hero">
-                      <span class="result-hero__label">Security score</span>
+                      <span class="result-hero__label">{{ ui().result.securityScore }}</span>
                       <strong [style.font-size.rem]="2">{{ scanResult(scan).score }}/100</strong>
                       <p>{{ scanResultRecommendation(scan) }}</p>
                       <div
                         class="progress"
                         [style.margin-top.px]="12"
                         role="img"
-                        [attr.aria-label]="'Security score ' + scanResult(scan).score + ' out of 100'"
+                        [attr.aria-label]="ui().result.scoreAria(scanResult(scan).score)"
                       >
                         <span [style.width.%]="scanResult(scan).score"></span>
                       </div>
@@ -762,10 +767,10 @@
                   </div>
 
                   <div class="mini-panel">
-                    <div class="mini-panel__title">Findings</div>
+                    <div class="mini-panel__title">{{ ui().result.findings }}</div>
                     @if ((scan.findings || []).length === 0) {
                       <div class="state state-compact">
-                        <strong>No findings recorded</strong>
+                        <strong>{{ ui().result.noFindingsRecorded }}</strong>
                         <p>This scan did not store any findings in the report payload, but it still has a clean result score.</p>
                       </div>
                     } @else {
@@ -784,12 +789,12 @@
                             <p class="detail-copy">{{ findingLocation(finding) }}</p>
                             @if (findingEvidence(finding)) {
                               <p class="detail-copy">
-                                <strong>Evidence:</strong> {{ findingEvidence(finding) }}
+                                <strong>{{ ui().result.evidence }}:</strong> {{ findingEvidence(finding) }}
                               </p>
                             }
                             @if (findingRecommendation(finding)) {
                               <p class="detail-copy">
-                                <strong>Fix:</strong> {{ findingRecommendation(finding) }}
+                                <strong>{{ ui().result.fix }}:</strong> {{ findingRecommendation(finding) }}
                               </p>
                             }
                           </article>
@@ -799,10 +804,10 @@
                   </div>
 
                   <div class="mini-panel">
-                    <div class="mini-panel__title">Remediation guidance</div>
+                    <div class="mini-panel__title">{{ ui().result.remediationGuidance }}</div>
                     @if ((scan.remediations || []).length === 0) {
                       <div class="state state-compact">
-                        <strong>No remediation guidance</strong>
+                        <strong>{{ ui().result.noRemediationGuidance }}</strong>
                         <p>PatchProof could not derive fix options for this scan payload.</p>
                       </div>
                     } @else {
@@ -976,8 +981,8 @@
         }
       } @else {
         <section class="panel empty-dashboard">
-          <strong>No project selected</strong>
-          <p>Create a local project and it will appear here automatically.</p>
+          <strong>{{ ui().sidebar.noProjectsTitle }}</strong>
+          <p>{{ ui().sidebar.noProjectsBody }}</p>
         </section>
       }
     </section>
@@ -994,10 +999,10 @@
       <div class="modal-card" (click)="$event.stopPropagation()">
         <div class="modal-card__head">
           <div>
-            <p class="eyebrow">New project</p>
-            <h2 id="create-project-title">Create a local project</h2>
+            <p class="eyebrow">{{ ui().sidebar.newProject }}</p>
+            <h2 id="create-project-title">{{ ui().sidebar.newProject }}</h2>
             <p class="modal-copy">
-              Create a clean project workspace first, then upload scans to it from the CLI.
+              {{ locale() === 'es' ? 'Crea primero un espacio de trabajo limpio y luego sube scans desde el CLI.' : 'Create a clean project workspace first, then upload scans to it from the CLI.' }}
             </p>
           </div>
           <button type="button" class="button button-ghost button-mini" (click)="closeCreateProjectDialog()">
@@ -1007,26 +1012,26 @@
 
         @if (createProjectError()) {
           <div class="state state-compact state-error">
-            <strong>Project creation failed</strong>
+            <strong>{{ locale() === 'es' ? 'Falló la creación del proyecto' : 'Project creation failed' }}</strong>
             <p>{{ createProjectError() }}</p>
           </div>
         }
 
         <div class="modal-form-grid">
           <label class="field">
-            <span>Project name</span>
+            <span>{{ locale() === 'es' ? 'Nombre del proyecto' : 'Project name' }}</span>
             <input
               type="text"
               autocomplete="off"
               spellcheck="false"
               [value]="createProjectNameDraft()"
               (input)="createProjectNameDraft.set($any($event.target).value)"
-              placeholder="PatchProof Demo"
+              [placeholder]="locale() === 'es' ? 'Demo de PatchProof' : 'PatchProof Demo'"
             />
           </label>
 
           <label class="field">
-            <span>Slug (optional)</span>
+            <span>{{ locale() === 'es' ? 'Slug (opcional)' : 'Slug (optional)' }}</span>
             <input
               type="text"
               autocomplete="off"
@@ -1039,20 +1044,20 @@
         </div>
 
         <label class="field">
-          <span>Description</span>
+          <span>{{ locale() === 'es' ? 'Descripción' : 'Description' }}</span>
           <textarea
             rows="4"
             autocomplete="off"
             spellcheck="false"
             [value]="createProjectDescriptionDraft()"
             (input)="createProjectDescriptionDraft.set($any($event.target).value)"
-            placeholder="Short description for the dashboard"
+            [placeholder]="locale() === 'es' ? 'Descripción breve para el dashboard' : 'Short description for the dashboard'"
           ></textarea>
         </label>
 
         <div class="modal-actions">
           <button type="button" class="button button-ghost" (click)="closeCreateProjectDialog()">
-            Cancel
+            {{ locale() === 'es' ? 'Cancelar' : 'Cancel' }}
           </button>
           <button
             type="button"
@@ -1060,7 +1065,7 @@
             [disabled]="!canCreateProject() || creatingProject()"
             (click)="createProject()"
           >
-            {{ creatingProject() ? 'Creating…' : 'Create project' }}
+            {{ creatingProject() ? (locale() === 'es' ? 'Creando…' : 'Creating…') : (locale() === 'es' ? 'Crear proyecto' : 'Create project') }}
           </button>
         </div>
       </div>

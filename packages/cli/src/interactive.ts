@@ -27,6 +27,7 @@ export interface ScanFlowOptions {
 
 export async function runScanFlow(options: ScanFlowOptions): Promise<number> {
   const targetPath = resolve(options.targetPath);
+  const copy = options.language === 'es' ? esCopy : enCopy;
   const action =
     options.action ??
     (options.saveProvided ? (options.save ? (options.reportPath ? 'report' : 'save') : 'local') : await chooseAction(targetPath, options));
@@ -65,8 +66,8 @@ export async function runScanFlow(options: ScanFlowOptions): Promise<number> {
     const savedProjectName = saved.data.project?.name ?? payload.project_name;
     const savedProjectSlug = saved.data.project?.slug ?? payload.project_slug;
     console.log('');
-    console.log(`Saved scan #${saved.data.id} to ${savedProjectName} (${savedProjectSlug}).`);
-    console.log(`Dashboard API: ${options.apiBaseUrl.replace(/\/$/, '')}`);
+    console.log(copy.savedScan(saved.data.id, savedProjectName, savedProjectSlug));
+    console.log(copy.dashboardApi(options.apiBaseUrl.replace(/\/$/, '')));
   }
 
   if (action === 'report') {
@@ -80,20 +81,21 @@ export async function runScanFlow(options: ScanFlowOptions): Promise<number> {
 }
 
 async function chooseAction(targetPath: string, options: ScanFlowOptions): Promise<'local' | 'save' | 'report'> {
+  const copy = options.language === 'es' ? esCopy : enCopy;
   if (!stdin.isTTY) {
     return options.save ? 'save' : 'local';
   }
 
   const prompt = createInterface({ input: stdin, output: stdout });
   try {
-    console.log(`Scanning: ${targetPath}`);
-    console.log('What do you want to do?');
-    console.log('  1) Scan and show the result only');
-    console.log('  2) Scan, show the result, and save it to the dashboard');
-    console.log('  3) Scan, save it, and export a Markdown report');
+    console.log(copy.scanning(targetPath));
+    console.log(copy.whatDoYouWant);
+    console.log(`  1) ${copy.option1}`);
+    console.log(`  2) ${copy.option2}`);
+    console.log(`  3) ${copy.option3}`);
 
     while (true) {
-      const answer = (await prompt.question('Choose 1, 2, or 3: ')).trim();
+      const answer = (await prompt.question(copy.choose)).trim();
       if (answer === '1') {
         return 'local';
       }
@@ -103,9 +105,33 @@ async function chooseAction(targetPath: string, options: ScanFlowOptions): Promi
       if (answer === '3') {
         return 'report';
       }
-      console.log('Please enter 1, 2, or 3.');
+      console.log(copy.invalidChoice);
     }
   } finally {
     prompt.close();
   }
 }
+
+const enCopy = {
+  scanning: (targetPath: string) => `Scanning: ${targetPath}`,
+  whatDoYouWant: 'What do you want to do?',
+  option1: 'Scan and show the result only',
+  option2: 'Scan, show the result, and save it to the dashboard',
+  option3: 'Scan, save it, and export a Markdown report',
+  choose: 'Choose 1, 2, or 3: ',
+  invalidChoice: 'Please enter 1, 2, or 3.',
+  savedScan: (id: number, projectName: string, projectSlug: string) => `Saved scan #${id} to ${projectName} (${projectSlug}).`,
+  dashboardApi: (apiBaseUrl: string) => `Dashboard API: ${apiBaseUrl}`,
+};
+
+const esCopy = {
+  scanning: (targetPath: string) => `Escaneando: ${targetPath}`,
+  whatDoYouWant: '¿Qué quieres hacer?',
+  option1: 'Escanear y mostrar solo el resultado',
+  option2: 'Escanear, mostrar el resultado y guardarlo en el dashboard',
+  option3: 'Escanear, guardarlo y exportar un reporte Markdown',
+  choose: 'Elige 1, 2 o 3: ',
+  invalidChoice: 'Por favor ingresa 1, 2 o 3.',
+  savedScan: (id: number, projectName: string, projectSlug: string) => `Scan guardado #${id} en ${projectName} (${projectSlug}).`,
+  dashboardApi: (apiBaseUrl: string) => `API del dashboard: ${apiBaseUrl}`,
+};
