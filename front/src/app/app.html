@@ -1,22 +1,4 @@
 <main class="shell">
-  <section class="topbar">
-    <div>
-      <p class="eyebrow">PatchProof</p>
-      <h1>Hosted scan review</h1>
-      <p class="lede">
-        Projects, summaries, scan history, and project API keys from the Laravel backend.
-      </p>
-    </div>
-
-    <div class="topbar-actions">
-      <span class="health-pill" [ngClass]="health()?.ok ? 'ok' : 'warn'">
-        {{ health()?.ok ? 'Connected' : 'Offline' }}
-      </span>
-      <button type="button" class="button button-ghost" (click)="refresh()">
-        Refresh
-      </button>
-    </div>
-  </section>
 
   @if (error()) {
     <section class="message message-error" role="alert">
@@ -30,8 +12,98 @@
     </section>
   }
 
-  <section class="layout">
-    <aside class="panel sidebar">
+  <section class="layout" [class.sidebar-collapsed]="sidebarCollapsed()">
+    <aside class="panel sidebar" [class.sidebar--collapsed]="sidebarCollapsed()">
+      <div class="sidebar-brand">
+        <div>
+          <p class="eyebrow">PatchProof</p>
+          <strong>Local scan review</strong>
+        </div>
+        <button
+          type="button"
+          class="button button-ghost button-mini"
+          aria-label="Collapse sidebar"
+          (click)="toggleSidebarCollapsed()"
+        >
+          «
+        </button>
+      </div>
+
+      @if (sidebarCollapsed()) {
+        <div class="sidebar-rail" aria-label="Collapsed workspace navigation">
+          <button
+            type="button"
+            class="sidebar-rail__button sidebar-rail__button--primary"
+            title="New project"
+            aria-label="New project"
+            (click)="openNewProjectForm()"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M12 5v14M5 12h14" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="sidebar-rail__button"
+            [class.active]="sidebarSection() === 'projects'"
+            title="Projects"
+            aria-label="Projects"
+            (click)="activateSidebarSection('projects')"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="4" y="4" width="6" height="6" rx="1" />
+              <rect x="14" y="4" width="6" height="6" rx="1" />
+              <rect x="4" y="14" width="6" height="6" rx="1" />
+              <rect x="14" y="14" width="6" height="6" rx="1" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="sidebar-rail__button"
+            [class.active]="sidebarSection() === 'scans'"
+            title="Scans"
+            aria-label="Scans"
+            (click)="activateSidebarSection('scans')"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="6" />
+              <path d="M20 20l-3.5-3.5" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="sidebar-rail__button"
+            [class.active]="sidebarSection() === 'policies'"
+            title="Policies"
+            aria-label="Policies"
+            (click)="activateSidebarSection('policies')"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 12a9 9 0 1 0 3-6.7" />
+              <path d="M3 4v4h4" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            class="sidebar-rail__button"
+            [class.active]="sidebarSection() === 'settings'"
+            title="Settings"
+            aria-label="Settings"
+            (click)="activateSidebarSection('settings')"
+          >
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M10.32 4.1a1 1 0 0 1 .99-.84h1.38a1 1 0 0 1 .99.84l.14.84a1 1 0 0 0 .57.73l.8.38a1 1 0 0 0 1.04-.11l.66-.49a1 1 0 0 1 1.32.1l.98.98a1 1 0 0 1 .1 1.32l-.49.66a1 1 0 0 0-.11 1.04l.38.8a1 1 0 0 0 .73.57l.84.14a1 1 0 0 1 .84.99v1.38a1 1 0 0 1-.84.99l-.84.14a1 1 0 0 0-.73.57l-.38.8a1 1 0 0 0 .11 1.04l.49.66a1 1 0 0 1-.1 1.32l-.98.98a1 1 0 0 1-1.32.1l-.66-.49a1 1 0 0 0-1.04-.11l-.8.38a1 1 0 0 0-.57.73l-.14.84a1 1 0 0 1-.99.84h-1.38a1 1 0 0 1-.99-.84l-.14-.84a1 1 0 0 0-.57-.73l-.8-.38a1 1 0 0 0-1.04.11l-.66.49a1 1 0 0 1-1.32-.1l-.98-.98a1 1 0 0 1-.1-1.32l.49-.66a1 1 0 0 0 .11-1.04l-.38-.8a1 1 0 0 0-.73-.57l-.84-.14A1 1 0 0 1 2 12v-1.38a1 1 0 0 1 .84-.99l.84-.14a1 1 0 0 0 .73-.57l.38-.8a1 1 0 0 0-.11-1.04l-.49-.66a1 1 0 0 1 .1-1.32l.98-.98a1 1 0 0 1 1.32-.1l.66.49a1 1 0 0 0 1.04.11l.8-.38a1 1 0 0 0 .57-.73l.14-.84Z" />
+              <circle cx="12" cy="12" r="3" />
+            </svg>
+          </button>
+        </div>
+      }
+
+      <button type="button" class="button sidebar-primary" (click)="openNewProjectForm()">
+        <span>+</span>
+        New project
+      </button>
+
       <div class="panel-head">
         <div>
           <h2>Projects</h2>
@@ -42,114 +114,245 @@
         }
       </div>
 
-      <section class="mini-panel auth-panel">
-        <div class="mini-panel__title">Admin access</div>
-        @if (canManageKeys()) {
-          <p class="auth-copy">
-            Stored locally in this browser. Needed to list and revoke project API keys.
-          </p>
-          <div class="auth-actions">
-            <span class="chip ok">Enabled</span>
-            <button type="button" class="button button-ghost" (click)="clearAdminKey()">
-              Remove key
-            </button>
-          </div>
-        } @else {
-          <p class="auth-copy">
-            Enter the admin key to unlock API key management for the selected project.
-          </p>
-          <label class="field">
-            <span>Admin key</span>
-            <input
-              type="password"
-              autocomplete="off"
-              spellcheck="false"
-              [value]="adminKeyDraft()"
-              (input)="adminKeyDraft.set($any($event.target).value)"
-              placeholder="X-PatchProof-Admin-Key"
-            />
-          </label>
-          <div class="auth-actions">
-            <button
-              type="button"
-              class="button"
-              [disabled]="!adminKeyDraft().trim()"
-              (click)="saveAdminKey()"
-            >
-              Save locally
-            </button>
-          </div>
-        }
-      </section>
-
-      <section class="mini-panel auth-panel">
-        <div class="mini-panel__title">AI access</div>
-        @if (canUseAi()) {
-          <p class="auth-copy">
-            Stored locally in this browser. Used to ask your own AI provider for remediation guidance.
-          </p>
-          <div class="auth-actions">
-            <span class="chip ok">Enabled</span>
-            <button type="button" class="button button-ghost" (click)="clearAiKey()">
-              Remove key
-            </button>
-          </div>
-        } @else {
-          <p class="auth-copy">
-            Add a provider API key if you want PatchProof to enrich the deterministic remediation guidance.
-          </p>
-          <label class="field">
-            <span>AI API key</span>
-            <input
-              type="password"
-              autocomplete="off"
-              spellcheck="false"
-              [value]="aiKeyDraft()"
-              (input)="aiKeyDraft.set($any($event.target).value)"
-              placeholder="sk-..."
-            />
-          </label>
-          <div class="auth-actions">
-            <button
-              type="button"
-              class="button"
-              [disabled]="!aiKeyDraft().trim()"
-              (click)="saveAiKey()"
-            >
-              Save locally
-            </button>
-          </div>
-        }
-      </section>
-
       @if (loading()) {
         <div class="state state-loading">Loading projects...</div>
       } @else if (projects().length === 0) {
         <div class="state">
           <strong>No projects yet</strong>
-          <p>Create a project from the API to start tracking scans.</p>
+          <p>Create a local project to start tracking scans.</p>
         </div>
       } @else {
-        <div class="project-list" role="list">
+        <div class="project-list" id="project-list-anchor" role="list">
           @for (project of projects(); track project.id) {
-            <button
-              type="button"
+            <div
               class="project-card"
+              role="listitem"
               [class.active]="selectedProjectId() === project.id"
-              (click)="selectProject(project.id)"
             >
-              <div class="project-card__header">
-                <div>
-                  <span class="project-card__name">{{ project.name }}</span>
-                  <span class="project-card__slug">{{ project.slug }}</span>
+              <button
+                type="button"
+                class="project-card__main"
+                (click)="selectProject(project.id)"
+              >
+                <div class="project-card__header">
+                  <div>
+                    <span class="project-card__name">{{ project.name }}</span>
+                    <span class="project-card__slug">{{ project.slug }}</span>
+                  </div>
+                  <span class="project-card__count">{{ project.scans_count ?? 0 }}</span>
                 </div>
-                <span class="project-card__count">{{ project.scans_count ?? 0 }}</span>
+                @if (isDemoProject(project)) {
+                  <span class="health-pill warn project-card__badge">Mockup</span>
+                }
+                  <p class="project-card__desc">{{ project.description || 'No description' }}</p>
+                  <p class="project-card__scan-meta">
+                    {{ project.scans_count ?? 0 }} scan{{ (project.scans_count ?? 0) === 1 ? '' : 's' }}
+                    ·
+                    {{
+                      project.latest_scan_at
+                        ? ('Last scan ' + (project.latest_scan_at | date: 'short'))
+                        : 'No scan yet'
+                    }}
+                  </p>
+                </button>
+
+              <div class="project-card__actions">
+                <button
+                  type="button"
+                  class="button button-ghost button-mini"
+                  [disabled]="deletingProjectId() === project.id || isDemoProject(project)"
+                  (click)="deleteProject(project)"
+                >
+                  {{
+                    isDemoProject(project)
+                      ? 'Demo'
+                      : deletingProjectId() === project.id
+                        ? 'Deleting…'
+                        : 'Delete'
+                  }}
+                </button>
               </div>
-              <p class="project-card__desc">{{ project.description || 'No description' }}</p>
-            </button>
+            </div>
           }
         </div>
       }
+
+      <nav class="sidebar-nav" aria-label="Workspace">
+        <button
+          type="button"
+          class="sidebar-nav__item"
+          [class.active]="sidebarSection() === 'projects'"
+          (click)="activateSidebarSection('projects')"
+        >
+          Projects
+        </button>
+        <button
+          type="button"
+          class="sidebar-nav__item"
+          [class.active]="sidebarSection() === 'scans'"
+          (click)="activateSidebarSection('scans')"
+        >
+          Scans
+        </button>
+        <button
+          type="button"
+          class="sidebar-nav__item"
+          [class.active]="sidebarSection() === 'policies'"
+          (click)="activateSidebarSection('policies')"
+        >
+          Policies
+        </button>
+        <button
+          type="button"
+          class="sidebar-nav__item"
+          [class.active]="sidebarSection() === 'settings'"
+          (click)="activateSidebarSection('settings')"
+        >
+          Settings
+        </button>
+      </nav>
+
+      <details class="sidebar-tools" [open]="sidebarToolsOpen()" id="ai-settings-anchor">
+        <summary>
+          Workspace tools
+        </summary>
+
+        <div class="sidebar-tools__body">
+          <div class="tool-card tool-card--compact">
+            <div class="panel-head">
+              <div>
+                <h2>AI provider</h2>
+                <p>Set a provider once and reuse it for review + remediation.</p>
+              </div>
+              <span class="meta">
+                {{ aiSettings()?.source === 'database' ? 'Saved locally' : 'From .env' }}
+              </span>
+            </div>
+
+            @if (aiSettingsError()) {
+              <div class="state state-compact state-error">
+                <strong>AI settings could not be saved</strong>
+                <p>{{ aiSettingsError() }}</p>
+              </div>
+            }
+
+            <div class="chips chips-compact">
+              <span class="chip" [ngClass]="aiSettings()?.configured ? 'ok' : 'warn'">
+                {{ aiSettings()?.configured ? 'Configured' : 'Not configured' }}
+              </span>
+              <span class="chip neutral">{{ aiSettings()?.provider || 'openai' }}</span>
+              <span class="chip">{{ aiSettings()?.model || 'gpt-4.1-mini' }}</span>
+            </div>
+
+            <label class="toggle-row">
+              <input
+                type="checkbox"
+                [checked]="aiEnabledDraft()"
+                (change)="aiEnabledDraft.set($any($event.target).checked)"
+              />
+              <span>
+                <strong>Enable AI review</strong>
+                <small>Advisory only; never blocks CI by default.</small>
+              </span>
+            </label>
+
+            <label class="field">
+              <span>Provider</span>
+              <select
+                [value]="aiProviderDraft()"
+                (change)="aiProviderDraft.set($any($event.target).value)"
+              >
+                @for (provider of aiSettings()?.available_providers || []; track provider.value) {
+                  <option [value]="provider.value">{{ provider.label }}</option>
+                }
+              </select>
+            </label>
+
+            <p class="tool-card__help">
+              {{ selectedAiProvider()?.description || 'Pick a provider for advisory AI review.' }}
+            </p>
+
+            <label class="field">
+              <span>Model</span>
+              <input
+                type="text"
+                autocomplete="off"
+                spellcheck="false"
+                [value]="aiModelDraft()"
+                (input)="aiModelDraft.set($any($event.target).value)"
+                placeholder="gpt-4.1-mini"
+              />
+            </label>
+
+            @if (selectedAiProvider()?.needs_base_url || aiProviderDraft() === 'openai') {
+              <label class="field">
+                <span>Base URL</span>
+                <input
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  [value]="aiBaseUrlDraft()"
+                  (input)="aiBaseUrlDraft.set($any($event.target).value)"
+                  placeholder="https://api.openai.com/v1"
+                />
+              </label>
+            }
+
+            <label class="field">
+              <span>API key</span>
+              <input
+                type="password"
+                autocomplete="off"
+                spellcheck="false"
+                [value]="aiApiKeyDraft()"
+                (input)="aiApiKeyDraft.set($any($event.target).value)"
+                [placeholder]="aiSettings()?.api_key_configured ? 'Leave blank to keep saved key' : 'sk-...'"
+              />
+            </label>
+
+            <div class="tool-card__meta">
+              <span class="meta">{{ aiApiKeyHint() }}</span>
+              @if (aiSettings()?.api_key_configured) {
+                <span class="meta">Current key source: {{ aiSettings()?.api_key_source }}</span>
+              }
+            </div>
+
+            <div class="tool-card__actions">
+              <button
+                type="button"
+                class="button button-ghost button-mini"
+                [disabled]="aiSettingsSaving() || !aiSettings()?.api_key_configured"
+                (click)="clearSavedAiKey()"
+              >
+                Clear saved key
+              </button>
+              <button
+                type="button"
+                class="button button-mini"
+                [disabled]="aiSettingsSaving()"
+                (click)="saveAiSettings()"
+              >
+                {{ aiSettingsSaving() ? 'Saving…' : 'Save locally' }}
+              </button>
+            </div>
+
+            <p class="tool-card__help tool-card__help--muted">
+              Manual alternative: set PATCHPROOF_REMEDIATION_AI_PROVIDER, PATCHPROOF_REMEDIATION_AI_MODEL,
+              PATCHPROOF_REMEDIATION_AI_BASE_URL and PATCHPROOF_REMEDIATION_AI_API_KEY in back/.env.
+            </p>
+          </div>
+        </div>
+      </details>
+
+      <div class="sidebar-footer">
+        <div class="sidebar-account">
+          <span class="sidebar-account__avatar">PP</span>
+          <div>
+            <strong>PatchProof Team</strong>
+            <span>Enterprise Plan</span>
+          </div>
+        </div>
+      </div>
     </aside>
 
     <section class="main-column">
@@ -160,147 +363,339 @@
       } @else if (selectedProject(); as project) {
         @if (projectSummary(); as summary) {
           <section class="panel summary-panel">
-            <div class="panel-head">
-              <div>
-                <h2>{{ project.name }}</h2>
-                <p>{{ project.slug }} · {{ project.description || 'No description' }}</p>
+            <div class="project-hero">
+              <div class="project-hero__copy">
+                <nav class="breadcrumbs" aria-label="Breadcrumb">
+                  <span>Projects</span>
+                  <span>›</span>
+                  <strong>{{ project.name }}</strong>
+                </nav>
+                <div class="project-title-row">
+                  <h2>{{ project.name }}</h2>
+                  <button
+                    type="button"
+                    class="icon-button"
+                    [attr.aria-label]="'Copy project slug ' + project.slug"
+                    (click)="copyText(project.slug)"
+                  >
+                    ⧉
+                  </button>
+                  @if (isDemoProjectActive()) {
+                    <span class="health-pill warn">Mockup</span>
+                  }
+                </div>
+                <p>
+                  {{ project.slug }} · {{ project.description || 'No description' }}
+                  ·
+                  {{
+                    project.latest_scan_at
+                      ? ('Last scan ' + (project.latest_scan_at | date: 'medium'))
+                      : 'No scan recorded yet'
+                  }}
+                </p>
               </div>
-              <span class="meta">
-                Last refresh {{ refreshedAt() ? (refreshedAt() | date: 'mediumTime') : 'now' }}
-              </span>
+
+              <div class="project-hero__actions">
+                <span class="health-pill" [ngClass]="health()?.ok ? 'ok' : 'warn'">
+                  {{ health()?.ok ? 'Connected' : 'Offline' }}
+                </span>
+                <div class="export-menu-wrap">
+                  <button
+                    type="button"
+                    class="button button-ghost"
+                    [attr.aria-expanded]="actionsMenuOpen()"
+                    aria-haspopup="menu"
+                    (click)="toggleActionsMenu()"
+                  >
+                    Actions
+                  </button>
+
+                  @if (actionsMenuOpen()) {
+                    <div class="export-menu" role="menu" aria-label="Project actions">
+                      <button
+                        type="button"
+                        class="button button-ghost button-mini export-menu__item"
+                        role="menuitem"
+                        (click)="loadDemoProject()"
+                      >
+                        Load mock project
+                      </button>
+                      <button
+                        type="button"
+                        class="button button-ghost button-mini export-menu__item"
+                        role="menuitem"
+                        (click)="activateSidebarSection('settings')"
+                      >
+                        Open settings
+                      </button>
+                      <button
+                        type="button"
+                        class="button button-ghost button-mini export-menu__item"
+                        role="menuitem"
+                        (click)="refresh()"
+                      >
+                        Refresh data
+                      </button>
+                    </div>
+                  }
+                </div>
+                <button type="button" class="button button-ghost" (click)="refresh()">Refresh</button>
+                <div class="export-menu-wrap">
+                  <button
+                    type="button"
+                    class="icon-button"
+                    [disabled]="exportingReport()"
+                    aria-haspopup="menu"
+                    [attr.aria-expanded]="reportMenuOpen()"
+                    [attr.aria-label]="'Export report menu'"
+                    title="Export report menu"
+                    (click)="toggleReportMenu()"
+                  >
+                    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                      <circle cx="5" cy="12" r="1.5" />
+                      <circle cx="12" cy="12" r="1.5" />
+                      <circle cx="19" cy="12" r="1.5" />
+                    </svg>
+                  </button>
+
+                  @if (reportMenuOpen()) {
+                    <div class="export-menu" role="menu" aria-label="Export report as">
+                      <button
+                        type="button"
+                        class="button button-ghost button-mini export-menu__item"
+                        role="menuitem"
+                        (click)="exportSelectedReport('markdown')"
+                      >
+                        Markdown (.md)
+                      </button>
+                      <button
+                        type="button"
+                        class="button button-ghost button-mini export-menu__item"
+                        role="menuitem"
+                        (click)="exportSelectedReport('pdf')"
+                      >
+                        PDF (.pdf)
+                      </button>
+                    </div>
+                  }
+                </div>
+                <span class="meta">
+                  Scan ID: {{ selectedScan() ? '#' + selectedScan()!.id : '—' }}
+                </span>
+                <span class="meta">
+                  {{ refreshedAt() ? (refreshedAt() | date: 'mediumTime') : 'now' }}
+                </span>
+              </div>
             </div>
 
-            <div class="metrics">
-              <article class="metric">
-                <span class="metric__label">Scans</span>
-                <strong class="metric__value">{{ summary.totals.scans }}</strong>
-              </article>
-              <article class="metric">
-                <span class="metric__label">Completed</span>
-                <strong class="metric__value">{{ statusCount(summary, 'completed') }}</strong>
-              </article>
-              <article class="metric">
-                <span class="metric__label">Failed</span>
-                <strong class="metric__value">{{ statusCount(summary, 'failed') }}</strong>
-              </article>
-              <article class="metric">
-                <span class="metric__label">Latest scan</span>
-                <strong class="metric__value">
-                  {{ summary.latest_scan_at ? (summary.latest_scan_at | date: 'medium') : 'n/a' }}
-                </strong>
-              </article>
-            </div>
-
-            <div class="breakdown-grid">
-              <div class="mini-panel">
-                <div class="mini-panel__title">Severity rollup</div>
-                <div class="chips">
-                  @for (item of summary.breakdowns.severities; track item.severity) {
-                    <span class="chip" [ngClass]="severityTone(item.severity || 'info')">
-                      {{ item.severity }} · {{ item.count }}
-                    </span>
-                  }
-                </div>
-              </div>
-              <div class="mini-panel">
-                <div class="mini-panel__title">Languages</div>
-                <div class="chips">
-                  @for (item of summary.breakdowns.languages; track item.language) {
-                    <span class="chip">
-                      {{ item.language }} · {{ item.count }}
-                    </span>
-                  }
-                </div>
-              </div>
-              <div class="mini-panel">
-                <div class="mini-panel__title">Sources</div>
-                <div class="chips">
-                  @for (item of summary.breakdowns.sources; track item.source) {
-                    <span class="chip">
-                      {{ item.source }} · {{ item.count }}
-                    </span>
-                  }
-                </div>
-              </div>
-              <div class="mini-panel">
-                <div class="mini-panel__title">Tool usage log</div>
-                @if (projectUsageEvents().length === 0) {
-                  <div class="state state-compact">
-                    <strong>No usage events yet</strong>
-                    <p>Each submitted scan will appear here as an auditable tool usage record.</p>
-                  </div>
-                } @else {
-                  <div class="finding-list">
-                    @for (event of projectUsageEvents(); track event.id) {
-                      <article class="finding-card">
-                        <div class="finding-card__head">
-                          <div>
-                            <strong>{{ usageLabel(event) }}</strong>
-                            <span>{{ usageSummary(event) }}</span>
-                          </div>
-                          <span class="chip" [ngClass]="usageTone(event)">
-                            {{ event.status || 'recorded' }}
-                          </span>
-                        </div>
-                        <p class="detail-copy">
-                          {{ event.created_at ? (event.created_at | date: 'short') : 'n/a' }}
-                        </p>
-                      </article>
-                    }
-                  </div>
-                }
-              </div>
-            </div>
           </section>
 
           <section class="panel detail-panel" id="scan-detail">
-              <div class="panel-head">
-                <div>
-                  <h2>Scan detail</h2>
-                  <p>Inspect findings, metadata, and report links for the selected scan.</p>
+            <div class="review-toolbar">
+              <div class="mode-tabs" role="tablist" aria-label="Scan review mode">
+                <button
+                  type="button"
+                  class="mode-tab"
+                  role="tab"
+                  [class.active]="aiReviewMode() === 'deterministic'"
+                  [attr.aria-selected]="aiReviewMode() === 'deterministic'"
+                  (click)="switchReviewMode('deterministic')"
+                >
+                  Deterministic Scan
+                </button>
+                <button
+                  type="button"
+                  class="mode-tab"
+                  role="tab"
+                  [class.active]="aiReviewMode() === 'ai'"
+                  [attr.aria-selected]="aiReviewMode() === 'ai'"
+                  (click)="switchReviewMode('ai')"
+                >
+                  AI Review Mode
+                </button>
+              </div>
+              <div class="review-toolbar__actions">
+                <span class="meta">{{ selectedScanLabel() }}</span>
+                @if (selectedScan()) {
+                  <button
+                    type="button"
+                    class="button button-ghost button-mini"
+                    [disabled]="aiReviewLoading()"
+                    (click)="generateAiReview()"
+                  >
+                    {{ aiReviewLoading() ? 'Generating…' : 'Generate AI review' }}
+                  </button>
+                }
+              </div>
+            </div>
+
+            @if (exportReportError()) {
+              <div class="state state-compact state-error">
+                <strong>Report export failed</strong>
+                <p>{{ exportReportError() }}</p>
+              </div>
+            }
+
+            @if (selectedScan(); as scan) {
+            @if (aiReviewMode() === 'ai') {
+              <div class="metrics">
+                <article class="metric">
+                  <span class="metric__label">Files reviewed</span>
+                  <strong class="metric__value">{{ scanFileCount(scan) }}</strong>
+                  <span class="metric__sub">Latest scan context</span>
+                </article>
+                <article class="metric">
+                  <span class="metric__label">Deterministic findings</span>
+                  <strong class="metric__value">{{ scanFindingTotal(scan) }}</strong>
+                  <span class="metric__sub">
+                    {{ scanFindingTotal(scan) === 0 ? 'No rule matches' : 'Rule matches found' }}
+                  </span>
+                </article>
+                <article class="metric">
+                  <span class="metric__label">AI suggestions</span>
+                  <strong class="metric__value">{{ aiReview()?.suggestions?.length ?? 0 }}</strong>
+                  <span class="metric__sub">
+                    {{ aiReview()?.suggestions?.length ? 'Needs human review' : 'No suggestions yet' }}
+                  </span>
+                </article>
+                <article class="metric">
+                  <span class="metric__label">Confidence avg</span>
+                  <strong class="metric__value">{{ aiReview()?.confidence_average || '0.00' }}</strong>
+                  <span class="metric__sub">Across all suggestions</span>
+                </article>
+              </div>
+
+              <div class="review-split">
+                <div class="mini-panel diff-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h2>Changes ({{ scanFileCount(scan) }} files)</h2>
+                      <p>Code review context for AI suggestions.</p>
+                    </div>
+                    <span class="meta">Sort: Changed files</span>
+                  </div>
+
+                  <div class="diff-file">
+                    <div class="diff-file__head">
+                      <div>
+                        <strong>{{ scan.project?.slug || project.slug }}</strong>
+                        <span>{{ scan.source }} · {{ scan.language }} · {{ scan.format }}</span>
+                      </div>
+                      <span class="chip neutral">Review context</span>
+                    </div>
+                    <pre class="diff-block">{{ reviewContextSnippet(scan) }}</pre>
+                  </div>
+
+                  <div class="chips chips-compact">
+                    <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
+                    <span class="chip">{{ scan.findings.length }} deterministic issues</span>
+                    <span class="chip neutral">{{ scan.created_at ? (scan.created_at | date: 'short') : 'n/a' }}</span>
+                  </div>
                 </div>
-                <div class="scan-detail-actions">
-                  <span class="meta">{{ selectedScanLabel() }}</span>
-                  @if (selectedScan()) {
-                    <button
-                      type="button"
-                      class="button button-ghost button-mini"
-                      [disabled]="aiRemediationsLoading()"
-                      (click)="generateAiRemediations()"
-                    >
-                      {{ aiRemediationsLoading() ? 'Generating…' : 'Generate AI guidance' }}
-                    </button>
+
+                <div class="mini-panel ai-panel">
+                  <div class="panel-head">
+                    <div>
+                      <h2>AI suggestions ({{ aiReview()?.suggestions?.length ?? 0 }})</h2>
+                      <p>Advisory notes only. Never blocks CI by default.</p>
+                    </div>
+                    <div class="panel-head__stack">
+                      <span class="chip" [ngClass]="aiReviewStatus().tone">{{ aiReviewStatus().label }}</span>
+                      <span class="meta">Sort: Confidence</span>
+                    </div>
+                  </div>
+
+                  @if (aiReviewError()) {
+                    <div class="state state-compact">
+                      <strong>AI review failed</strong>
+                      <p>{{ aiReviewError() }}</p>
+                    </div>
+                  } @else if (aiReview(); as review) {
+                    @if ((review.source === 'deterministic' || review.note) && !isDemoProjectActive()) {
+                      <div class="state state-compact state-warning">
+                        <strong>AI not configured</strong>
+                        <p>
+                          {{ review.note || 'No AI provider is configured, so this review is using a deterministic fallback.' }}
+                        </p>
+                      </div>
+                    }
+
+                    <div class="ai-summary">
+                      <div class="ai-status-line">
+                        <span class="chip" [ngClass]="aiReviewStatus().tone">{{ aiReviewStatus().label }}</span>
+                        <span class="meta">{{ aiReviewStatus().detail }}</span>
+                      </div>
+                      @if (aiReviewCallLabel(); as call) {
+                        <div class="ai-status-line ai-status-line--last-call">
+                          <span class="chip" [ngClass]="call.tone">
+                            Last AI call · {{ call.label }}
+                          </span>
+                          <span class="meta">
+                            {{ call.at | date: 'medium' }}
+                            · {{ call.provider }}
+                            · {{ call.model }}
+                          </span>
+                        </div>
+                      }
+                      <p class="detail-copy">{{ review.summary }}</p>
+                      <div class="chips">
+                        <span class="chip neutral">{{ review.source }}</span>
+                        <span class="chip">{{ review.provider }}</span>
+                        <span class="chip">{{ review.model }}</span>
+                        <span class="chip warn">Needs human review</span>
+                      </div>
+                    </div>
+
+                    @if (review.suggestions.length === 0) {
+                      <div class="state state-compact">
+                        <strong>No AI suggestions returned</strong>
+                        <p>Try a different scan or connect a stronger AI provider prompt.</p>
+                      </div>
+                    } @else {
+                      <div class="finding-list">
+                        @for (item of review.suggestions; track $index) {
+                          <article class="finding-card">
+                            <div class="finding-card__head">
+                              <div>
+                                <strong>{{ item.title }}</strong>
+                                <span>{{ item.category }}</span>
+                              </div>
+                              <div class="ai-score">
+                                <span class="meta">Confidence {{ item.confidence }}</span>
+                                <div class="progress">
+                                  <span [style.width.%]="aiConfidenceWidth(item.confidence)"></span>
+                                </div>
+                              </div>
+                            </div>
+                            <p class="detail-copy">
+                              <strong>Rationale:</strong> {{ item.rationale }}
+                            </p>
+                            <p class="detail-copy">
+                              <strong>Recommendation:</strong> {{ item.recommendation }}
+                            </p>
+                            <p class="detail-copy detail-meta-copy">
+                              <span class="chip warn">Needs human review</span>
+                            </p>
+                          </article>
+                        }
+                      </div>
+                    }
+                  } @else {
+                    <div class="state state-compact">
+                      <strong>No AI review yet</strong>
+                      <p>Generate AI review to turn this scan into advisory security notes.</p>
+                    </div>
                   }
                 </div>
               </div>
 
-            @if (selectedScan(); as scan) {
-              <div class="detail-grid">
+              <div class="deterministic-rail">
                 <div class="mini-panel">
-                  <div class="mini-panel__title">Overview</div>
-                  <div class="chips">
-                    <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
-                    <span class="chip">{{ scan.source }}</span>
-                    <span class="chip">{{ scan.language }}</span>
-                    <span class="chip">{{ scan.format }}</span>
-                    <span class="chip">fail on {{ scan.fail_on }}</span>
-                    <span class="chip" [ngClass]="severityTone(scanWorstSeverity(scan))">
-                      {{ scanFindingTotal(scan) }} findings
-                    </span>
-                  </div>
-                  <section class="result-hero">
-                    <span class="result-hero__label">Reviewed project</span>
-                    <strong>{{ selectedProjectLabel() }}</strong>
-                    <p>{{ scanFindingSummary(scan) }} detected in this scan.</p>
-                  </section>
-                </div>
-
-                <div class="mini-panel">
-                  <div class="mini-panel__title">Findings</div>
+                  <div class="mini-panel__title">Deterministic findings</div>
                   @if ((scan.findings || []).length === 0) {
-                    <div class="state state-compact">
-                      <strong>No findings recorded</strong>
-                      <p>This scan did not store any findings in the report payload.</p>
+                    <div class="state state-compact state-compact--success">
+                      <strong>No rule matches</strong>
+                      <p>The deterministic scanner did not flag anything in this scan.</p>
                     </div>
                   } @else {
                     <div class="finding-list">
@@ -316,113 +711,171 @@
                             </span>
                           </div>
                           <p class="detail-copy">{{ findingLocation(finding) }}</p>
-                          @if (findingEvidence(finding)) {
-                            <p class="detail-copy">
-                              <strong>Evidence:</strong> {{ findingEvidence(finding) }}
-                            </p>
-                          }
-                          @if (findingRecommendation(finding)) {
-                            <p class="detail-copy">
-                              <strong>Fix:</strong> {{ findingRecommendation(finding) }}
-                            </p>
-                          }
                         </article>
                       }
                     </div>
                   }
                 </div>
+              </div>
 
-                <div class="mini-panel">
-                  <div class="mini-panel__title">Remediation guidance</div>
-                  @if ((scan.remediations || []).length === 0) {
-                    <div class="state state-compact">
-                      <strong>No remediation guidance</strong>
-                      <p>PatchProof could not derive fix options for this scan payload.</p>
-                    </div>
-                  } @else {
-                    <div class="finding-list">
-                      @for (remediation of scan.remediations; track remediation.rule_id + '-' + remediation.finding_title) {
-                        <article class="finding-card">
-                          <div class="finding-card__head">
-                            <div>
-                              <strong>{{ remediation.finding_title }}</strong>
-                              <span>{{ remediation.rule_id || 'Rule' }} · {{ remediation.rule_title }}</span>
-                            </div>
-                            <span class="chip neutral">AI-ready</span>
-                          </div>
-                          <p class="detail-copy">{{ remediation.summary }}</p>
-                          <p class="detail-copy">
-                            <strong>Primary fix:</strong> {{ remediationPrimaryFix(remediation) }}
-                          </p>
-                          @if (remediation.alternatives.length > 0) {
-                            <p class="detail-copy">
-                              <strong>Alternatives:</strong> {{ remediationAlternatives(remediation) }}
-                            </p>
-                          }
-                          <p class="detail-copy detail-meta-copy">
-                            <strong>AI prompt:</strong> {{ remediationPrompt(remediation) }}
-                          </p>
-                        </article>
-                      }
-                    </div>
-                  }
-                </div>
-
-                <div class="mini-panel">
-                  <div class="mini-panel__title">AI enrichment</div>
-                  @if (aiRemediationsError()) {
-                    <div class="state state-compact">
-                      <strong>AI request failed</strong>
-                      <p>{{ aiRemediationsError() }}</p>
-                    </div>
-                  } @else if (aiRemediations(); as ai) {
-                    @if (ai.note) {
-                      <p class="detail-copy">{{ ai.note }}</p>
-                    }
+              <p class="review-disclaimer">
+                AI suggestions are advisory and never block CI by default.
+              </p>
+              } @else {
+                <div class="detail-grid">
+                  <div class="mini-panel">
+                    <div class="mini-panel__title">Overview</div>
                     <div class="chips">
-                      <span class="chip neutral">{{ ai.source }}</span>
-                      <span class="chip">{{ ai.provider }}</span>
-                      <span class="chip">{{ ai.model }}</span>
+                      <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
+                      <span class="chip">{{ scan.source }}</span>
+                      <span class="chip">{{ scan.language }}</span>
+                      <span class="chip">{{ scan.format }}</span>
+                      <span class="chip">fail on {{ scan.fail_on }}</span>
+                      <span class="chip" [ngClass]="scanResultTone(scan)">
+                        {{ scanResultLabel(scan) }}
+                      </span>
+                      <span class="chip" [ngClass]="severityTone(scanWorstSeverity(scan))">
+                        {{ scanFindingTotal(scan) }} findings
+                      </span>
                     </div>
-                    @if (ai.remediations.length === 0) {
+                    <section class="result-hero">
+                      <span class="result-hero__label">Reviewed project</span>
+                      <strong>{{ selectedProjectLabel() }}</strong>
+                      <p>
+                        {{ scanResultSummary(scan) }}
+                      </p>
+                    </section>
+                  </div>
+
+                  <div class="mini-panel">
+                    <div class="mini-panel__title">Findings</div>
+                    @if ((scan.findings || []).length === 0) {
                       <div class="state state-compact">
-                        <strong>No AI remediations returned</strong>
+                        <strong>No findings recorded</strong>
+                        <p>This scan did not store any findings in the report payload, but it still has a clean result score.</p>
                       </div>
                     } @else {
                       <div class="finding-list">
-                        @for (remediation of ai.remediations; track remediation.rule_id + '-' + remediation.finding_title) {
+                        @for (finding of scan.findings; track $index) {
+                          <article class="finding-card">
+                            <div class="finding-card__head">
+                              <div>
+                                <strong>{{ findingTitle(finding) }}</strong>
+                                <span>{{ findingRuleBadge(finding) }}</span>
+                              </div>
+                              <span class="chip" [ngClass]="findingSeverity(finding)">
+                                {{ findingSeverityLabel(finding) }}
+                              </span>
+                            </div>
+                            <p class="detail-copy">{{ findingLocation(finding) }}</p>
+                            @if (findingEvidence(finding)) {
+                              <p class="detail-copy">
+                                <strong>Evidence:</strong> {{ findingEvidence(finding) }}
+                              </p>
+                            }
+                            @if (findingRecommendation(finding)) {
+                              <p class="detail-copy">
+                                <strong>Fix:</strong> {{ findingRecommendation(finding) }}
+                              </p>
+                            }
+                          </article>
+                        }
+                      </div>
+                    }
+                  </div>
+
+                  <div class="mini-panel">
+                    <div class="mini-panel__title">Remediation guidance</div>
+                    @if ((scan.remediations || []).length === 0) {
+                      <div class="state state-compact">
+                        <strong>No remediation guidance</strong>
+                        <p>PatchProof could not derive fix options for this scan payload.</p>
+                      </div>
+                    } @else {
+                      <div class="finding-list">
+                        @for (remediation of scan.remediations; track remediation.rule_id + '-' + remediation.finding_title) {
                           <article class="finding-card">
                             <div class="finding-card__head">
                               <div>
                                 <strong>{{ remediation.finding_title }}</strong>
                                 <span>{{ remediation.rule_id || 'Rule' }} · {{ remediation.rule_title }}</span>
                               </div>
-                              <span class="chip neutral">{{ remediation.confidence || 'medium' }}</span>
+                              <span class="chip neutral">AI-ready</span>
                             </div>
                             <p class="detail-copy">{{ remediation.summary }}</p>
                             <p class="detail-copy">
-                              <strong>Primary fix:</strong> {{ remediation.primary_fix.title }} — {{ remediation.primary_fix.description }}
+                              <strong>Primary fix:</strong> {{ remediationPrimaryFix(remediation) }}
+                            </p>
+                            @if (remediation.alternatives.length > 0) {
+                              <p class="detail-copy">
+                                <strong>Alternatives:</strong> {{ remediationAlternatives(remediation) }}
+                              </p>
+                            }
+                            <p class="detail-copy detail-meta-copy">
+                              <strong>AI prompt:</strong> {{ remediationPrompt(remediation) }}
                             </p>
                           </article>
                         }
                       </div>
                     }
-                  } @else {
-                    <div class="state state-compact">
-                      <strong>No AI output yet</strong>
-                      <p>Generate AI guidance to enrich deterministic suggestions with a provider call.</p>
-                    </div>
-                  }
-                </div>
+                  </div>
 
-                <details class="mini-panel advanced-panel">
-                  <summary>Advanced metadata</summary>
-                  <p class="detail-copy detail-meta-copy">
-                    Extra report context for debugging or integrations. This is not the main result.
-                  </p>
-                  <pre class="json-block">{{ scan.metadata | json }}</pre>
-                </details>
-              </div>
+                  <div class="mini-panel">
+                    <div class="mini-panel__title">AI enrichment</div>
+                    @if (aiRemediationsError()) {
+                      <div class="state state-compact">
+                        <strong>AI request failed</strong>
+                        <p>{{ aiRemediationsError() }}</p>
+                      </div>
+                    } @else if (aiRemediations(); as ai) {
+                      @if (ai.note) {
+                        <p class="detail-copy">{{ ai.note }}</p>
+                      }
+                      <div class="chips">
+                        <span class="chip neutral">{{ ai.source }}</span>
+                        <span class="chip">{{ ai.provider }}</span>
+                        <span class="chip">{{ ai.model }}</span>
+                      </div>
+                      @if (ai.remediations.length === 0) {
+                        <div class="state state-compact">
+                          <strong>No AI remediations returned</strong>
+                        </div>
+                      } @else {
+                        <div class="finding-list">
+                          @for (remediation of ai.remediations; track remediation.rule_id + '-' + remediation.finding_title) {
+                            <article class="finding-card">
+                              <div class="finding-card__head">
+                                <div>
+                                  <strong>{{ remediation.finding_title }}</strong>
+                                  <span>{{ remediation.rule_id || 'Rule' }} · {{ remediation.rule_title }}</span>
+                                </div>
+                                <span class="chip neutral">{{ remediation.confidence || 'medium' }}</span>
+                              </div>
+                              <p class="detail-copy">{{ remediation.summary }}</p>
+                              <p class="detail-copy">
+                                <strong>Primary fix:</strong> {{ remediation.primary_fix.title }} — {{ remediation.primary_fix.description }}
+                              </p>
+                            </article>
+                          }
+                        </div>
+                      }
+                    } @else {
+                      <div class="state state-compact">
+                        <strong>No AI output yet</strong>
+                        <p>Generate AI guidance to enrich deterministic suggestions with a provider call.</p>
+                      </div>
+                    }
+                  </div>
+
+                  <details class="mini-panel advanced-panel">
+                    <summary>Advanced metadata</summary>
+                    <p class="detail-copy detail-meta-copy">
+                      Extra report context for debugging or integrations. This is not the main result.
+                    </p>
+                    <pre class="json-block">{{ scan.metadata | json }}</pre>
+                  </details>
+                </div>
+              }
             } @else {
               <div class="state state-compact">
                 <strong>No scan selected</strong>
@@ -431,137 +884,172 @@
             }
           </section>
 
-          <section class="grid">
-            <article class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>Recent scans</h2>
-                  <p>Latest scans for {{ project.name }} · {{ project.slug }}.</p>
+          <details class="secondary-panels">
+            <summary>More project data</summary>
+            <section class="grid" id="more-project-data-anchor">
+              <article class="panel">
+                <div class="panel-head">
+                  <div>
+                    <h2>Recent scans</h2>
+                    <p>Latest scans for {{ project.name }} · {{ project.slug }}.</p>
+                  </div>
+                  <span class="meta">{{ projectScans().length }} rows</span>
                 </div>
-                <span class="meta">{{ projectScans().length }} rows</span>
-              </div>
 
-              @if (projectScans().length === 0) {
-                <div class="state">
-                  <strong>No scans yet</strong>
-                  <p>Submit a scan through the CLI or GitHub Action to populate this view.</p>
-                </div>
-              } @else {
-                <div class="scan-list">
-                  @for (scan of projectScans(); track scan.id) {
-                    <button
-                      type="button"
-                      class="scan-card"
-                      [class.selected]="selectedScanId() === scan.id"
-                      [attr.aria-pressed]="selectedScanId() === scan.id"
-                      (click)="selectScan(scan.id)"
-                    >
-                      <div class="scan-card__head">
-                        <div class="scan-card__title">
-                          <strong>#{{ scan.id }} · {{ scanRepositoryLabel(scan) }}</strong>
-                          <span>{{ scan.source }} · {{ scan.language }} · {{ scan.format }} · fail on {{ scan.fail_on }}</span>
+                @if (projectScans().length === 0) {
+                  <div class="state">
+                    <strong>No scans yet</strong>
+                    <p>Submit a scan through the CLI or GitHub Action to populate this view.</p>
+                  </div>
+                } @else {
+                  <div class="scan-list">
+                    @for (scan of projectScans(); track scan.id) {
+                      <button
+                        type="button"
+                        class="scan-card"
+                        [class.selected]="selectedScanId() === scan.id"
+                        [attr.aria-pressed]="selectedScanId() === scan.id"
+                        (click)="selectScan(scan.id)"
+                      >
+                        <div class="scan-card__head">
+                          <div class="scan-card__title">
+                            <strong>#{{ scan.id }} · {{ scanRepositoryLabel(scan) }}</strong>
+                            <span>{{ scan.source }} · {{ scan.language }} · {{ scan.format }} · fail on {{ scan.fail_on }}</span>
+                          </div>
+                          <div class="scan-card__meta">
+                            <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
+                            <span class="meta">{{ scan.created_at ? (scan.created_at | date: 'short') : 'n/a' }}</span>
+                          </div>
                         </div>
-                        <div class="scan-card__meta">
-                          <span class="chip" [ngClass]="statusTone(scan.status)">{{ scan.status }}</span>
-                          <span class="meta">{{ scan.created_at ? (scan.created_at | date: 'short') : 'n/a' }}</span>
+
+                        <div class="scan-card__body">
+                          <div class="chips chips-compact">
+                            <span class="chip" [ngClass]="severityTone(scanWorstSeverity(scan))">
+                              {{ scanFindingTotal(scan) }} findings
+                            </span>
+                            <span class="chip" [ngClass]="scanResultTone(scan)">
+                              {{ scanResultLabel(scan) }}
+                            </span>
+                            @if (scanSeverityCount(scan, 'critical') > 0) {
+                              <span class="chip danger">{{ scanSeverityCount(scan, 'critical') }} critical</span>
+                            }
+                            @if (scanSeverityCount(scan, 'high') > 0) {
+                              <span class="chip warn">{{ scanSeverityCount(scan, 'high') }} high</span>
+                            }
+                            @if (scanSeverityCount(scan, 'medium') > 0) {
+                              <span class="chip neutral">{{ scanSeverityCount(scan, 'medium') }} medium</span>
+                            }
+                          </div>
+                          <p class="scan-summary">{{ scanResultSummary(scan) }}</p>
+                          <p class="scan-summary scan-summary--project">
+                            Reviewed project: {{ scanRepositoryLabel(scan) }}
+                          </p>
                         </div>
-                      </div>
 
-                      <div class="scan-card__body">
-                        <div class="chips chips-compact">
-                          <span class="chip" [ngClass]="severityTone(scanWorstSeverity(scan))">
-                            {{ scanFindingTotal(scan) }} findings
-                          </span>
-                          @if (scanSeverityCount(scan, 'critical') > 0) {
-                            <span class="chip danger">{{ scanSeverityCount(scan, 'critical') }} critical</span>
-                          }
-                          @if (scanSeverityCount(scan, 'high') > 0) {
-                            <span class="chip warn">{{ scanSeverityCount(scan, 'high') }} high</span>
-                          }
-                          @if (scanSeverityCount(scan, 'medium') > 0) {
-                            <span class="chip neutral">{{ scanSeverityCount(scan, 'medium') }} medium</span>
-                          }
+                        <div class="scan-card__footer">
+                          <span class="scan-card__footer-copy">Open findings</span>
+                          <span class="button button-ghost button-mini">Inspect</span>
                         </div>
-                        <p class="scan-summary">{{ scanFindingSummary(scan) }}</p>
-                        <p class="scan-summary scan-summary--project">
-                          Reviewed project: {{ scanRepositoryLabel(scan) }}
-                        </p>
-                      </div>
+                      </button>
+                    }
+                  </div>
+                }
+              </article>
 
-                      <div class="scan-card__footer">
-                        <span class="scan-card__footer-copy">Open findings</span>
-                        <span class="button button-ghost button-mini">Inspect</span>
-                      </div>
-                    </button>
-                  }
-                </div>
-              }
-            </article>
 
-            <article class="panel">
-              <div class="panel-head">
-                <div>
-                  <h2>API keys</h2>
-                  <p>Upload tokens for CLI and GitHub Action scans.</p>
-                </div>
-                <span class="meta">{{ projectApiKeys().length }} keys</span>
-              </div>
-
-              @if (!canManageKeys()) {
-                <div class="state">
-                  <strong>Admin auth not configured</strong>
-                  <p>
-                    Add the admin key in the sidebar to list, inspect, and revoke API keys.
-                  </p>
-                </div>
-              } @else if (projectApiKeysError()) {
-                <div class="state">
-                  <strong>Admin key rejected</strong>
-                  <p>{{ projectApiKeysError() }}</p>
-                </div>
-              } @else if (projectApiKeys().length === 0) {
-                <div class="state">
-                  <strong>No keys yet</strong>
-                  <p>Create one with the admin API before pointing a scanner at this project.</p>
-                </div>
-              } @else {
-                <div class="stack">
-                  @for (key of projectApiKeys(); track key.id) {
-                    <div class="key-row" [class.revoked]="!!key.revoked_at">
-                      <div class="cell-stack">
-                        <strong>{{ key.name || 'Unnamed key' }}</strong>
-                        <span>{{ key.key_prefix }}</span>
-                        <span class="meta">
-                          Last used:
-                          {{ key.last_used_at ? (key.last_used_at | date: 'short') : 'never' }}
-                        </span>
-                      </div>
-                      <div class="key-actions">
-                        <span class="chip" [ngClass]="key.revoked_at ? 'danger' : 'ok'">
-                          {{ key.revoked_at ? 'Revoked' : 'Active' }}
-                        </span>
-                        <button
-                          type="button"
-                          class="button button-ghost"
-                          [disabled]="!!key.revoked_at"
-                          (click)="revokeKey(key)"
-                        >
-                          Revoke
-                        </button>
-                      </div>
-                    </div>
-                  }
-                </div>
-              }
-            </article>
-          </section>
+            </section>
+          </details>
         }
       } @else {
         <section class="panel empty-dashboard">
           <strong>No project selected</strong>
-          <p>Create a project through the API and it will appear here automatically.</p>
+          <p>Create a local project and it will appear here automatically.</p>
         </section>
       }
     </section>
   </section>
+
+  @if (createProjectDialogOpen()) {
+    <div class="modal-backdrop" (click)="closeCreateProjectDialog()"></div>
+    <section
+      class="modal-shell"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="create-project-title"
+    >
+      <div class="modal-card" (click)="$event.stopPropagation()">
+        <div class="modal-card__head">
+          <div>
+            <p class="eyebrow">New project</p>
+            <h2 id="create-project-title">Create a local project</h2>
+            <p class="modal-copy">
+              Create a clean project workspace first, then upload scans to it from the CLI.
+            </p>
+          </div>
+          <button type="button" class="button button-ghost button-mini" (click)="closeCreateProjectDialog()">
+            ✕
+          </button>
+        </div>
+
+        @if (createProjectError()) {
+          <div class="state state-compact state-error">
+            <strong>Project creation failed</strong>
+            <p>{{ createProjectError() }}</p>
+          </div>
+        }
+
+        <div class="modal-form-grid">
+          <label class="field">
+            <span>Project name</span>
+            <input
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              [value]="createProjectNameDraft()"
+              (input)="createProjectNameDraft.set($any($event.target).value)"
+              placeholder="PatchProof Demo"
+            />
+          </label>
+
+          <label class="field">
+            <span>Slug (optional)</span>
+            <input
+              type="text"
+              autocomplete="off"
+              spellcheck="false"
+              [value]="createProjectSlugDraft()"
+              (input)="createProjectSlugDraft.set($any($event.target).value)"
+              placeholder="patchproof-demo"
+            />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Description</span>
+          <textarea
+            rows="4"
+            autocomplete="off"
+            spellcheck="false"
+            [value]="createProjectDescriptionDraft()"
+            (input)="createProjectDescriptionDraft.set($any($event.target).value)"
+            placeholder="Short description for the dashboard"
+          ></textarea>
+        </label>
+
+        <div class="modal-actions">
+          <button type="button" class="button button-ghost" (click)="closeCreateProjectDialog()">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="button"
+            [disabled]="!canCreateProject() || creatingProject()"
+            (click)="createProject()"
+          >
+            {{ creatingProject() ? 'Creating…' : 'Create project' }}
+          </button>
+        </div>
+      </div>
+    </section>
+  }
 </main>

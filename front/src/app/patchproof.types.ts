@@ -4,6 +4,7 @@ export interface ProjectRecord {
   slug: string;
   description: string | null;
   scans_count?: number;
+  latest_scan_at?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -57,11 +58,22 @@ export interface ScanRecord {
   status: string;
   summary: Record<string, number>;
   findings: Array<Record<string, unknown>>;
+  result?: ScanResultRecord;
   remediations?: RemediationRecord[];
   metadata: Record<string, unknown>;
   report_url: string | null;
   created_at: string | null;
   updated_at: string | null;
+}
+
+export interface ScanResultRecord {
+  score: number;
+  verdict: string;
+  label: string;
+  summary: string;
+  recommendation: string;
+  finding_total: number;
+  severity: string;
 }
 
 export interface AiRemediationResponse {
@@ -71,6 +83,27 @@ export interface AiRemediationResponse {
   model: string;
   note?: string;
   remediations: RemediationRecord[];
+}
+
+export interface AiReviewSuggestion {
+  title: string;
+  severity: string;
+  confidence: string;
+  rationale: string;
+  recommendation: string;
+  category: string;
+  needs_human_review: boolean;
+}
+
+export interface AiReviewResponse {
+  scan_id: number;
+  source: string;
+  provider: string;
+  model: string;
+  summary: string;
+  confidence_average: string;
+  suggestions: AiReviewSuggestion[];
+  note?: string;
 }
 
 export interface RemediationAction {
@@ -121,4 +154,27 @@ export interface HealthResponse {
   ok: boolean;
   service: string;
   version: string;
+}
+
+export interface AiProviderOption {
+  value: 'openai' | 'anthropic' | 'openai-compatible';
+  label: string;
+  description: string;
+  needs_base_url: boolean;
+}
+
+export interface AiSettingsResponse {
+  enabled: boolean;
+  provider: AiProviderOption['value'];
+  model: string;
+  base_url: string | null;
+  source: 'env' | 'database';
+  api_key_source: 'env' | 'database' | 'none';
+  api_key_configured: boolean;
+  configured: boolean;
+  available_providers: AiProviderOption[];
+}
+
+export interface AiSettingsEnvelope {
+  data: AiSettingsResponse;
 }

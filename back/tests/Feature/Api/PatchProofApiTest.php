@@ -4,7 +4,10 @@ namespace Tests\Feature\Api;
 
 use App\Models\Project;
 use App\Models\ProjectApiKey;
+use App\Models\PatchproofSetting;
+use App\Models\Scan;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -40,6 +43,8 @@ class PatchProofApiTest extends TestCase
 
     public function test_project_api_key_can_be_created_by_admin(): void
     {
+        Config::set('patchproof.admin_key', 'admin-secret');
+
         $project = Project::create([
             'name' => 'PatchProof CLI',
             'slug' => 'patchproof-cli',
@@ -63,6 +68,8 @@ class PatchProofApiTest extends TestCase
 
     public function test_project_api_keys_can_be_listed_by_admin(): void
     {
+        Config::set('patchproof.admin_key', 'admin-secret');
+
         $project = Project::create([
             'name' => 'PatchProof CLI',
             'slug' => 'patchproof-cli',
@@ -93,6 +100,8 @@ class PatchProofApiTest extends TestCase
 
     public function test_project_api_key_can_be_revoked_by_admin(): void
     {
+        Config::set('patchproof.admin_key', 'admin-secret');
+
         $project = Project::create([
             'name' => 'PatchProof CLI',
             'slug' => 'patchproof-cli',
@@ -116,19 +125,15 @@ class PatchProofApiTest extends TestCase
         $this->assertNotNull(ProjectApiKey::find($apiKey->id)?->revoked_at);
     }
 
-    public function test_scan_requires_a_valid_project_api_key(): void
+    public function test_project_can_be_deleted_by_admin(): void
     {
+        Config::set('patchproof.admin_key', 'admin-secret');
+
         $project = Project::create([
             'name' => 'PatchProof CLI',
             'slug' => 'patchproof-cli',
             'description' => 'Open source CLI',
         ]);
-
-        $this->postJson('/api/scans', [
-            'project_id' => $project->id,
-            'language' => 'es',
-        ])
-            ->assertUnauthorized();
 
         $apiKey = ProjectApiKey::create([
             'project_id' => $project->id,
@@ -137,49 +142,139 @@ class PatchProofApiTest extends TestCase
             'key_hash' => hash('sha256', 'plain-project-key'),
         ]);
 
-        $response = $this->withHeader('X-PatchProof-Key', 'plain-project-key')
-            ->postJson('/api/scans', [
-                'project_id' => $project->id,
-                'language' => 'es',
-                'fail_on' => 'high',
-                'format' => 'markdown',
-                'status' => 'completed',
-                'summary' => [
-                    'total' => 2,
-                    'critical' => 1,
+        $scan = Scan::create([
+            'project_id' => $project->id,
+            'source' => 'cli',
+            'language' => 'en',
+            'fail_on' => 'high',
+            'format' => 'json',
+            'status' => 'completed',
+            'summary' => ['total' => 0],
+            'findings' => [],
+            'metadata' => [],
+            'report_url' => null,
+        ]);
+
+        $this->withHeader('X-PatchProof-Admin-Key', 'admin-secret')
+            ->deleteJson("/api/projects/{$project->id}")
+            ->assertOk()
+            ->assertJsonPath('data.deleted', true)
+            ->assertJsonPath('data.project.id', $project->id);
+
+        $this->assertDatabaseMissing('projects', [
+            'id' => $project->id,
+        ]);
+        $this->assertDatabaseMissing('project_api_keys', [
+            'id' => $apiKey->id,
+        ]);
+        $this->assertDatabaseMissing('scans', [
+            'id' => $scan->id,
+        ]);
+    }
+
+    public function test_project_delete_requires_admin_key_when_configured(): void
+    {
+        Config::set('patchproof.admin_key', 'admin-secret');
+
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        $this->deleteJson("/api/projects/{$project->id}")
+            ->assertUnauthorized();
+    }
+
+    public function test_ai_settings_can_be_loaded_and_saved(): void
+    {
+        Config::set('patchproof.remediation_ai.enabled', false);
+        Config::set('patchproof.remediation_ai.provider', 'openai');
+        Config::set('patchproof.remediation_ai.model', 'gpt-4.1-mini');
+        Config::set('patchproof.remediation_ai.base_url', 'https://api.openai.com/v1');
+        Config::set('patchproof.remediation_ai.api_key', '');
+
+        $this->getJson('/api/settings/ai')
+            ->assertOk()
+            ->assertJsonPath('data.enabled', false)
+            ->assertJsonPath('data.provider', 'openai')
+            ->assertJsonPath('data.model', 'gpt-4.1-mini')
+            ->assertJsonPath('data.api_key_configured', false)
+            ->assertJsonPath('data.source', 'env');
+
+        $this->putJson('/api/settings/ai', [
+            'enabled' => true,
+            'provider' => 'anthropic',
+            'model' => 'claude-sonnet-4-20250514',
+            'base_url' => null,
+            'api_key' => 'ant-key',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.enabled', true)
+            ->assertJsonPath('data.provider', 'anthropic')
+            ->assertJsonPath('data.model', 'claude-sonnet-4-20250514')
+            ->assertJsonPath('data.api_key_configured', true)
+            ->assertJsonPath('data.api_key_source', 'database')
+            ->assertJsonPath('data.source', 'database');
+
+        $this->assertDatabaseHas('patchproof_settings', [
+            'key' => 'remediation_ai',
+        ]);
+
+        $this->getJson('/api/settings/ai')
+            ->assertOk()
+            ->assertJsonPath('data.provider', 'anthropic')
+            ->assertJsonPath('data.model', 'claude-sonnet-4-20250514')
+            ->assertJsonPath('data.api_key_configured', true);
+    }
+
+    public function test_scan_creation_works_without_project_api_key(): void
+    {
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        $response = $this->postJson('/api/scans', [
+            'project_id' => $project->id,
+            'language' => 'es',
+            'fail_on' => 'high',
+            'format' => 'markdown',
+            'status' => 'completed',
+            'summary' => [
+                'total' => 2,
+                'critical' => 1,
+            ],
+            'findings' => [
+                [
+                    'ruleId' => 'PP001',
+                    'severity' => 'critical',
                 ],
-                'findings' => [
-                    [
-                        'ruleId' => 'PP001',
-                        'severity' => 'critical',
-                    ],
-                    [
-                        'ruleId' => 'PP002',
-                        'severity' => 'high',
-                        'title' => 'Potential SQL injection',
-                        'description' => 'The added line builds a SQL statement with string concatenation.',
-                        'evidence' => '$query->orderByRaw("CASE WHEN report.status = " . KReport::STATUS_PENDING . " THEN 0 ELSE 1 END");',
-                    ],
+                [
+                    'ruleId' => 'PP002',
+                    'severity' => 'high',
+                    'title' => 'Potential SQL injection',
+                    'description' => 'The added line builds a SQL statement with string concatenation.',
+                    'evidence' => '$query->orderByRaw("CASE WHEN report.status = " . KReport::STATUS_PENDING . " THEN 0 ELSE 1 END");',
                 ],
-                'metadata' => [
-                    'tool' => 'patchproof',
-                ],
-            ])
+            ],
+            'metadata' => [
+                'tool' => 'patchproof',
+            ],
+        ])
             ->assertCreated()
             ->assertJsonPath('data.project.id', $project->id)
             ->assertJsonPath('data.language', 'es')
             ->assertJsonPath('data.summary.total', 2)
             ->assertJsonPath('data.findings.0.ruleId', 'PP001')
+            ->assertJsonPath('data.result.score', 45)
+            ->assertJsonPath('data.result.label', 'Needs review')
             ->assertJsonPath('data.remediations.1.rule_id', 'PP002')
             ->assertJsonPath('data.remediations.1.primary_fix.title', 'Use bound parameters')
             ->assertJsonPath('data.remediations.1.source', 'deterministic');
 
         $scanId = $response->json('data.id');
-
-        $this->assertDatabaseHas('project_api_keys', [
-            'id' => $apiKey->id,
-            'last_used_at' => now()->toDateTimeString(),
-        ]);
 
         $this->assertDatabaseHas('usage_events', [
             'project_id' => $project->id,
@@ -205,7 +300,7 @@ class PatchProofApiTest extends TestCase
             ->assertJsonPath('data.0.kind', 'scan');
     }
 
-    public function test_scan_creation_rejects_key_for_other_project(): void
+    public function test_scan_creation_works_even_if_other_project_has_key(): void
     {
         $project = Project::create([
             'name' => 'PatchProof CLI',
@@ -216,7 +311,7 @@ class PatchProofApiTest extends TestCase
         $otherProject = Project::create([
             'name' => 'Other Project',
             'slug' => 'other-project',
-            'description' => 'Should not accept the token',
+            'description' => 'Should not affect the local scan flow',
         ]);
 
         ProjectApiKey::create([
@@ -226,14 +321,13 @@ class PatchProofApiTest extends TestCase
             'key_hash' => hash('sha256', 'plain-project-key'),
         ]);
 
-        $this->withHeader('X-PatchProof-Key', 'plain-project-key')
-            ->postJson('/api/scans', [
-                'project_id' => $project->id,
-            ])
-            ->assertUnauthorized();
+        $this->postJson('/api/scans', [
+            'project_id' => $project->id,
+        ])
+            ->assertCreated();
     }
 
-    public function test_revoked_key_cannot_be_used_to_submit_scans(): void
+    public function test_revoked_key_does_not_block_scan_submission(): void
     {
         $project = Project::create([
             'name' => 'PatchProof CLI',
@@ -249,11 +343,10 @@ class PatchProofApiTest extends TestCase
             'revoked_at' => now(),
         ]);
 
-        $this->withHeader('X-PatchProof-Key', 'plain-project-key')
-            ->postJson('/api/scans', [
-                'project_id' => $project->id,
-            ])
-            ->assertUnauthorized();
+        $this->postJson('/api/scans', [
+            'project_id' => $project->id,
+        ])
+            ->assertCreated();
 
         $this->assertNotNull(ProjectApiKey::find($apiKey->id)?->revoked_at);
     }
@@ -465,5 +558,181 @@ class PatchProofApiTest extends TestCase
             ->assertJsonPath('data.provider', 'openai')
             ->assertJsonPath('data.remediations.0.rule_id', 'PP002')
             ->assertJsonPath('data.remediations.0.primary_fix.title', 'Use bound parameters');
+    }
+
+    public function test_ai_review_endpoint_returns_advisory_suggestions_when_key_is_present(): void
+    {
+        Config::set('patchproof.remediation_ai.enabled', true);
+        Config::set('patchproof.remediation_ai.api_key', 'service-key');
+
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'CLI',
+            'key_prefix' => 'patchproof',
+            'key_hash' => hash('sha256', 'project-key'),
+        ]);
+
+        $scan = $this->withHeader('X-PatchProof-Key', 'project-key')
+            ->postJson('/api/scans', [
+                'project_id' => $project->id,
+                'status' => 'completed',
+                'language' => 'en',
+                'source' => 'cli',
+                'summary' => [
+                    'critical' => 0,
+                    'high' => 0,
+                    'medium' => 0,
+                    'low' => 0,
+                    'total' => 0,
+                ],
+                'findings' => [],
+                'metadata' => [
+                    'repo' => 'patchproof-cli',
+                ],
+            ])
+            ->assertCreated()
+            ->json('data.id');
+
+        Http::fake([
+            'https://api.openai.com/v1/chat/completions' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => json_encode([
+                                'summary' => 'Advisory review complete.',
+                                'confidence_average' => '0.78',
+                                'suggestions' => [
+                                    [
+                                        'title' => 'Possible auth bypass',
+                                        'severity' => 'high',
+                                        'confidence' => 'high',
+                                        'rationale' => 'Review route guards around sensitive endpoints.',
+                                        'recommendation' => 'Confirm authorization checks before state-changing operations.',
+                                        'category' => 'authorization',
+                                        'needs_human_review' => true,
+                                    ],
+                                ],
+                            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $this->postJson("/api/scans/{$scan}/review/ai", [
+            'api_key' => 'service-key',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.scan_id', $scan)
+            ->assertJsonPath('data.source', 'ai')
+            ->assertJsonPath('data.provider', 'openai')
+            ->assertJsonPath('data.summary', 'Advisory review complete.')
+            ->assertJsonPath('data.confidence_average', '0.78')
+            ->assertJsonPath('data.suggestions.0.title', 'Possible auth bypass')
+            ->assertJsonPath('data.suggestions.0.needs_human_review', true);
+    }
+
+    public function test_ai_review_endpoint_synthesizes_a_clean_scan_note_when_the_model_returns_no_suggestions(): void
+    {
+        Config::set('patchproof.remediation_ai.enabled', true);
+        Config::set('patchproof.remediation_ai.api_key', 'service-key');
+
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        ProjectApiKey::create([
+            'project_id' => $project->id,
+            'name' => 'CLI',
+            'key_prefix' => 'patchproof',
+            'key_hash' => hash('sha256', 'project-key'),
+        ]);
+
+        $scan = $this->withHeader('X-PatchProof-Key', 'project-key')
+            ->postJson('/api/scans', [
+                'project_id' => $project->id,
+                'status' => 'completed',
+                'language' => 'en',
+                'source' => 'cli',
+                'summary' => [
+                    'critical' => 0,
+                    'high' => 0,
+                    'medium' => 0,
+                    'low' => 0,
+                    'total' => 0,
+                ],
+                'findings' => [],
+                'metadata' => [
+                    'repo' => 'patchproof-cli',
+                ],
+            ])
+            ->assertCreated()
+            ->json('data.id');
+
+        Http::fake([
+            'https://api.openai.com/v1/chat/completions' => Http::response([
+                'choices' => [
+                    [
+                        'message' => [
+                            'content' => json_encode([
+                                'summary' => 'The scan completed cleanly.',
+                                'confidence_average' => '0.52',
+                                'suggestions' => [],
+                            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE),
+                        ],
+                    ],
+                ],
+            ], 200),
+        ]);
+
+        $this->postJson("/api/scans/{$scan}/review/ai", [
+            'api_key' => 'service-key',
+        ])
+            ->assertOk()
+            ->assertJsonPath('data.scan_id', $scan)
+            ->assertJsonPath('data.source', 'ai')
+            ->assertJsonPath('data.suggestions.0.title', 'Clean scan advisory')
+            ->assertJsonPath('data.suggestions.0.category', 'clean-scan')
+            ->assertJsonPath('data.suggestions.0.needs_human_review', true);
+    }
+
+    public function test_clean_scans_still_expose_a_result_summary(): void
+    {
+        $project = Project::create([
+            'name' => 'PatchProof CLI',
+            'slug' => 'patchproof-cli',
+            'description' => 'Open source CLI',
+        ]);
+
+        $this->postJson('/api/scans', [
+            'project_id' => $project->id,
+            'status' => 'completed',
+            'language' => 'en',
+            'source' => 'cli',
+            'summary' => [
+                'critical' => 0,
+                'high' => 0,
+                'medium' => 0,
+                'low' => 0,
+                'total' => 0,
+            ],
+            'findings' => [],
+            'metadata' => [
+                'repo' => 'patchproof-cli',
+            ],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.result.score', 100)
+            ->assertJsonPath('data.result.verdict', 'clean')
+            ->assertJsonPath('data.result.label', 'Clean result')
+            ->assertJsonPath('data.result.finding_total', 0);
     }
 }
