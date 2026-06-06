@@ -125,10 +125,8 @@ class PatchProofApiTest extends TestCase
         $this->assertNotNull(ProjectApiKey::find($apiKey->id)?->revoked_at);
     }
 
-    public function test_project_can_be_deleted_by_admin(): void
+    public function test_project_can_be_deleted_locally_without_admin_key(): void
     {
-        Config::set('patchproof.admin_key', 'admin-secret');
-
         $project = Project::create([
             'name' => 'PatchProof CLI',
             'slug' => 'patchproof-cli',
@@ -155,8 +153,7 @@ class PatchProofApiTest extends TestCase
             'report_url' => null,
         ]);
 
-        $this->withHeader('X-PatchProof-Admin-Key', 'admin-secret')
-            ->deleteJson("/api/projects/{$project->id}")
+        $this->deleteJson("/api/projects/{$project->id}")
             ->assertOk()
             ->assertJsonPath('data.deleted', true)
             ->assertJsonPath('data.project.id', $project->id);
@@ -170,20 +167,6 @@ class PatchProofApiTest extends TestCase
         $this->assertDatabaseMissing('scans', [
             'id' => $scan->id,
         ]);
-    }
-
-    public function test_project_delete_requires_admin_key_when_configured(): void
-    {
-        Config::set('patchproof.admin_key', 'admin-secret');
-
-        $project = Project::create([
-            'name' => 'PatchProof CLI',
-            'slug' => 'patchproof-cli',
-            'description' => 'Open source CLI',
-        ]);
-
-        $this->deleteJson("/api/projects/{$project->id}")
-            ->assertUnauthorized();
     }
 
     public function test_ai_settings_can_be_loaded_and_saved(): void

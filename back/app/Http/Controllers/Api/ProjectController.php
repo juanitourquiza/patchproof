@@ -8,7 +8,6 @@ use App\Http\Resources\UsageEventResource;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
@@ -52,8 +51,6 @@ class ProjectController extends Controller
 
     public function destroy(Project $project, Request $request): JsonResponse
     {
-        $this->authorizeAdmin($request);
-
         $projectName = $project->name;
         $project->delete();
 
@@ -180,16 +177,4 @@ class ProjectController extends Controller
         return $slug;
     }
 
-    private function authorizeAdmin(Request $request): void
-    {
-        $expected = (string) Config::get('patchproof.admin_key', '');
-
-        if ($expected === '') {
-            return;
-        }
-
-        $provided = (string) $request->header('X-PatchProof-Admin-Key', '');
-
-        abort_unless(hash_equals($expected, $provided), 401, 'Unauthorized');
-    }
 }
