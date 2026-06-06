@@ -9,7 +9,7 @@ return [
         'trim',
         explode(',', env(
             'CORS_ALLOWED_ORIGINS',
-            'http://localhost:4202,http://127.0.0.1:4202,http://[::1]:4202,http://localhost:4200,http://127.0.0.1:4200,http://[::1]:4200'
+            'http://localhost:4210,http://127.0.0.1:4210,http://[::1]:4210,http://localhost:4202,http://127.0.0.1:4202,http://[::1]:4202,http://localhost:4200,http://127.0.0.1:4200,http://[::1]:4200'
         ))
     ))),
 
