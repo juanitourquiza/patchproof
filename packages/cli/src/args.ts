@@ -2,11 +2,19 @@ export type OutputFormat = 'text' | 'json' | 'markdown' | 'sarif';
 export type Language = 'en' | 'es';
 
 export interface CliOptions {
-  readonly command: 'paudit' | 'audit' | 'ppscan' | 'report' | 'init' | 'rules' | 'help' | 'version';
+  readonly command: 'paudit' | 'audit' | 'ppscan' | 'scan' | 'report' | 'init' | 'rules' | 'help' | 'version';
   readonly file?: string;
   readonly targetPath?: string;
   readonly useGitDiff: boolean;
   readonly includeIgnored: boolean;
+  readonly apiBaseUrl?: string;
+  readonly apiBaseUrlProvided: boolean;
+  readonly projectName?: string;
+  readonly projectNameProvided: boolean;
+  readonly projectSlug?: string;
+  readonly projectSlugProvided: boolean;
+  readonly save: boolean;
+  readonly saveProvided: boolean;
   readonly output: OutputFormat | null;
   readonly outputProvided: boolean;
   readonly report?: string;
@@ -20,7 +28,7 @@ export interface CliOptions {
 const validFormats = new Set<OutputFormat>(['text', 'json', 'markdown', 'sarif']);
 const validSeverities = new Set<CliOptions['failOn']>(['critical', 'high', 'medium', 'low']);
 const validLanguages = new Set<Language>(['en', 'es']);
-const commandNames = new Set<CliOptions['command']>(['paudit', 'audit', 'ppscan', 'report', 'init', 'rules', 'help', 'version']);
+const commandNames = new Set<CliOptions['command']>(['paudit', 'audit', 'ppscan', 'scan', 'report', 'init', 'rules', 'help', 'version']);
 
 export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
   const [first = 'help', ...rest] = argv;
@@ -51,7 +59,7 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
     return defaultOptions(command);
   }
 
-  if (command !== 'audit' && command !== 'paudit' && command !== 'ppscan' && command !== 'report') {
+  if (command !== 'audit' && command !== 'paudit' && command !== 'ppscan' && command !== 'scan' && command !== 'report') {
     return defaultOptions('help');
   }
 
@@ -59,6 +67,14 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
   let targetPath: string | undefined;
   let useGitDiff = false;
   let includeIgnored = false;
+  let apiBaseUrl: string | undefined;
+  let apiBaseUrlProvided = false;
+  let projectName: string | undefined;
+  let projectNameProvided = false;
+  let projectSlug: string | undefined;
+  let projectSlugProvided = false;
+  let save = false;
+  let saveProvided = false;
   let output: OutputFormat | null = null;
   let outputProvided = false;
   let report: string | undefined;
@@ -77,7 +93,7 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
       continue;
     }
 
-    if ((command === 'ppscan' || command === 'report') && !value.startsWith('--') && !targetPath) {
+    if ((command === 'ppscan' || command === 'report' || command === 'scan') && !value.startsWith('--') && !targetPath) {
       targetPath = value;
       continue;
     }
@@ -89,6 +105,39 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
 
     if (value === '--include-ignored') {
       includeIgnored = true;
+      continue;
+    }
+
+    if (value === '--api-base-url') {
+      apiBaseUrl = requiredValue(options, index, '--api-base-url');
+      apiBaseUrlProvided = true;
+      index += 1;
+      continue;
+    }
+
+    if (value === '--project-name') {
+      projectName = requiredValue(options, index, '--project-name');
+      projectNameProvided = true;
+      index += 1;
+      continue;
+    }
+
+    if (value === '--project-slug') {
+      projectSlug = requiredValue(options, index, '--project-slug');
+      projectSlugProvided = true;
+      index += 1;
+      continue;
+    }
+
+    if (value === '--save') {
+      save = true;
+      saveProvided = true;
+      continue;
+    }
+
+    if (value === '--no-save') {
+      save = false;
+      saveProvided = true;
       continue;
     }
 
@@ -141,6 +190,14 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
     targetPath,
     useGitDiff,
     includeIgnored,
+    apiBaseUrl,
+    apiBaseUrlProvided,
+    projectName,
+    projectNameProvided,
+    projectSlug,
+    projectSlugProvided,
+    save,
+    saveProvided,
     output,
     outputProvided,
     report,
@@ -157,6 +214,14 @@ function defaultOptions(command: CliOptions['command']): CliOptions {
     command,
     useGitDiff: false,
     includeIgnored: false,
+    apiBaseUrl: undefined,
+    apiBaseUrlProvided: false,
+    projectName: undefined,
+    projectNameProvided: false,
+    projectSlug: undefined,
+    projectSlugProvided: false,
+    save: false,
+    saveProvided: false,
     output: 'text',
     outputProvided: false,
     report: undefined,

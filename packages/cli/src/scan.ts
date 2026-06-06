@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { readFile, readdir } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
 import { builtInRules } from '@patchproof/core';
-import type { AuditResult, DiffLine, Finding, Severity } from '@patchproof/core';
+import type { AuditResult, AuditRule, DiffLine, Finding, Severity } from '@patchproof/core';
 
 const allowedExtensions = new Set([
   '.ts',
@@ -45,6 +45,7 @@ export interface WorkspaceScanOptions {
   readonly targetPath: string;
   readonly includeIgnored: boolean;
   readonly minimumSeverity?: Severity;
+  readonly rules?: readonly AuditRule[];
 }
 
 export async function scanWorkspace(options: WorkspaceScanOptions): Promise<AuditResult> {
@@ -76,7 +77,7 @@ export async function scanWorkspace(options: WorkspaceScanOptions): Promise<Audi
     lines: addedLines
   };
 
-  const findings = builtInRules
+  const findings = (options.rules ?? builtInRules)
     .flatMap((rule) => rule.run({ diff, addedLines }))
     .filter((finding) => (options.minimumSeverity ? severityAtLeast(finding.severity, options.minimumSeverity) : true))
     .sort((left, right) => left.file.localeCompare(right.file) || left.line - right.line || left.ruleId.localeCompare(right.ruleId));

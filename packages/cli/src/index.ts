@@ -6,6 +6,7 @@ import { loadConfig, resolveAuditRules, resolveFailOn, resolveLanguage } from '.
 import { formatResult, formatRules } from './format.js';
 import { helpText, initConfigText } from './help.js';
 import { readDiffInput } from './input.js';
+import { runScanFlow } from './interactive.js';
 import { scanWorkspace } from './scan.js';
 import { shouldFail } from './threshold.js';
 
@@ -40,7 +41,8 @@ export async function main(argv = process.argv.slice(2), runtimeName = process.a
       const result = await scanWorkspace({
         targetPath: options.targetPath ?? process.cwd(),
         includeIgnored: options.includeIgnored,
-        minimumSeverity: failOn
+        minimumSeverity: failOn,
+        rules: resolveAuditRules(builtInRules, config)
       });
       const lang = resolveLanguage(options.lang, config);
       const output = options.outputProvided ? options.output ?? 'text' : 'text';
@@ -55,12 +57,35 @@ export async function main(argv = process.argv.slice(2), runtimeName = process.a
       return shouldFail(result, failOn) ? 1 : 0;
     }
 
+    if (options.command === 'scan') {
+      const failOn = resolveFailOn(options.failOn, config);
+      const lang = resolveLanguage(options.lang, config);
+      const output = options.outputProvided ? options.output ?? 'text' : 'text';
+      const apiBaseUrl = options.apiBaseUrl ?? process.env.PATCHPROOF_API_BASE_URL ?? 'http://127.0.0.1:8000/api';
+
+      return await runScanFlow({
+        targetPath: options.targetPath ?? process.cwd(),
+        includeIgnored: options.includeIgnored,
+        minimumSeverity: failOn,
+        language: lang,
+        output,
+        reportPath: options.report,
+        save: options.save,
+        saveProvided: options.saveProvided,
+        apiBaseUrl,
+        projectName: options.projectName,
+        projectSlug: options.projectSlug,
+        rules: resolveAuditRules(builtInRules, config)
+      });
+    }
+
     if (options.command === 'report') {
       const failOn = resolveFailOn(options.failOn, config);
       const result = await scanWorkspace({
         targetPath: options.targetPath ?? process.cwd(),
         includeIgnored: options.includeIgnored,
-        minimumSeverity: failOn
+        minimumSeverity: failOn,
+        rules: resolveAuditRules(builtInRules, config)
       });
       const lang = resolveLanguage(options.lang, config);
       const output = options.outputProvided ? options.output ?? 'markdown' : 'markdown';
