@@ -8,6 +8,7 @@ use App\Http\Resources\UsageEventResource;
 use App\Models\Project;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
 
@@ -17,6 +18,7 @@ class ProjectController extends Controller
     {
         $projects = Project::query()
             ->withCount('scans')
+            ->withMax('scans as latest_scan_at', 'created_at')
             ->latest()
             ->get();
 
@@ -45,6 +47,25 @@ class ProjectController extends Controller
     {
         return response()->json([
             'data' => $project->loadCount('scans'),
+        ]);
+    }
+
+    public function destroy(Project $project, Request $request): JsonResponse
+    {
+        $this->authorizeAdmin($request);
+
+        $projectName = $project->name;
+        $project->delete();
+
+        return response()->json([
+            'data' => [
+                'deleted' => true,
+                'project' => [
+                    'id' => $project->id,
+                    'name' => $projectName,
+                    'slug' => $project->slug,
+                ],
+            ],
         ]);
     }
 
@@ -157,5 +178,18 @@ class ProjectController extends Controller
         }
 
         return $slug;
+    }
+
+    private function authorizeAdmin(Request $request): void
+    {
+        $expected = (string) Config::get('patchproof.admin_key', '');
+
+        if ($expected === '') {
+            return;
+        }
+
+        $provided = (string) $request->header('X-PatchProof-Admin-Key', '');
+
+        abort_unless(hash_equals($expected, $provided), 401, 'Unauthorized');
     }
 }

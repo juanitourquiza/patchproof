@@ -44,7 +44,33 @@ export async function main(argv = process.argv.slice(2), runtimeName = process.a
       });
       const lang = resolveLanguage(options.lang, config);
       const output = options.outputProvided ? options.output ?? 'text' : 'text';
-      console.log(formatResult(result, output, lang));
+      const formatted = formatResult(result, output, lang);
+      console.log(formatted);
+
+      if (options.reportProvided && options.report) {
+        writeFileSync(options.report, `${formatted}\n`);
+        console.log(`Wrote report to ${options.report}`);
+      }
+
+      return shouldFail(result, failOn) ? 1 : 0;
+    }
+
+    if (options.command === 'report') {
+      const failOn = resolveFailOn(options.failOn, config);
+      const result = await scanWorkspace({
+        targetPath: options.targetPath ?? process.cwd(),
+        includeIgnored: options.includeIgnored,
+        minimumSeverity: failOn
+      });
+      const lang = resolveLanguage(options.lang, config);
+      const output = options.outputProvided ? options.output ?? 'markdown' : 'markdown';
+      const formatted = formatResult(result, output, lang);
+      const reportPath = options.report ?? defaultReportPath(output);
+
+      writeFileSync(reportPath, `${formatted}\n`);
+      console.log(`Wrote report to ${reportPath}`);
+      console.log(formatted);
+
       return shouldFail(result, failOn) ? 1 : 0;
     }
 
@@ -69,6 +95,19 @@ export async function main(argv = process.argv.slice(2), runtimeName = process.a
   } catch (error) {
     console.error(error instanceof Error ? error.message : String(error));
     return 2;
+  }
+}
+
+function defaultReportPath(format: string): string {
+  switch (format) {
+    case 'json':
+      return 'patchproof-report.json';
+    case 'sarif':
+      return 'patchproof-report.sarif';
+    case 'text':
+      return 'patchproof-report.txt';
+    default:
+      return 'patchproof-report.md';
   }
 }
 

@@ -4,7 +4,11 @@ PatchProof is a local-first security review tool for AI-generated code diffs.
 
 Spanish README: [README_ES.md](README_ES.md).
 
-The first release focuses on a fast npm CLI that audits `git diff` output before code reaches a pull request. The hosted Laravel + Angular product is already in progress: the Laravel backend stores projects, scans, and project API keys for hosted ingestion, and the Angular front-end now shows project summaries, scan history, and key management.
+Latest release: `v0.3.0`
+
+Latest reference audit baseline: `0 findings` across the PHP sample repo used in this workspace.
+
+The first release focuses on a fast npm CLI that audits `git diff` output before code reaches a pull request. The product direction is now local-first: the Laravel backend stores projects and scans from each developer's machine, and the Angular front-end shows project summaries, scan history, and project creation without requiring API keys.
 
 Current OWASP coverage is intentionally incremental, not exhaustive. PatchProof currently covers focused checks for:
 
@@ -19,13 +23,15 @@ Current OWASP coverage is intentionally incremental, not exhaustive. PatchProof 
 - A04 Insecure Design
 - A09 Security Logging and Monitoring Failures
 
+PatchProof also ships deterministic remediation guidance for each finding, plus optional AI enrichment when you want more context or alternative fixes.
+
 ## Project Layout
 
 ```txt
 patchproof/
   packages/core/  TypeScript audit engine and built-in rules
   packages/cli/   `npx patchproof` CLI
-  back/           Laravel API for hosted reports, teams, and API keys
+  back/           Laravel API for local scan storage and dashboard data
   front/          Angular dashboard for scan history and reports
 ```
 
@@ -37,9 +43,10 @@ npm run build
 git diff | node packages/cli/dist/index.js paudit
 node packages/cli/dist/index.js paudit --diff --format sarif
 node packages/cli/dist/index.js ppscan /path/to/repo --format markdown
+node packages/cli/dist/index.js report /path/to/repo --report patchproof-report.md
 ```
 
-If you want the hosted dashboard, run the Laravel backend first and then the Angular front. In development, the front points at `http://127.0.0.1:8001/api` through `src/environments/environment.development.ts`.
+If you want the dashboard, run the Laravel backend first and then the Angular front. In development, the front points at `http://127.0.0.1:8001/api` through `src/environments/environment.development.ts`.
 
 After publishing, the intended public command is:
 
@@ -54,6 +61,7 @@ patchproof paudit --diff
 patchproof paudit --file changes.diff --format json
 git diff | patchproof paudit --format markdown
 patchproof ppscan /path/to/repo --include-ignored --format markdown
+patchproof report /path/to/repo --report patchproof-report.md
 patchproof rules
 patchproof init
 ```
@@ -123,10 +131,10 @@ npm run build
 ## Roadmap
 
 1. Expand A02, A04, A08, and A09 with more crypto/design/integrity/logging checks.
-2. Tighten A01 route heuristics to reduce the remaining noise in `routes/api.php`.
+2. Keep the reference audit baseline clean as new features land.
 3. Add custom rules and config loading from `patchproof.config.json`.
 4. Ship the GitHub Action wrapper with SARIF upload support.
 5. Improve `ppscan` working tree scanning and path filtering.
-6. Implement `back/` Laravel hosted reporting.
-7. Add project API key management and authenticated scan ingestion.
-8. Implement `front/` Angular dashboard.
+6. Continue improving `back/` Laravel local scan storage and summaries.
+7. Keep the local dashboard focused on projects and scan history.
+8. Simplify local scan ingestion and reporting.

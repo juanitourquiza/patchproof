@@ -1,0 +1,9 @@
+diff --git a/database/migrations/2026_05_07_000000_activate_pg_trgm.php b/database/migrations/2026_05_07_000000_activate_pg_trgm.php
+--- a/database/migrations/2026_05_07_000000_activate_pg_trgm.php
++++ b/database/migrations/2026_05_07_000000_activate_pg_trgm.php
+@@ -1,5 +1,7 @@
+ use Illuminate\Database\Migrations\Migration;
+ use Illuminate\Support\Facades\DB;
+ 
++// Safe migration config
++DB::statement('ALTER DATABASE "'.config('database.connections.pgsql.database').'" SET pg_trgm.similarity_threshold = 0.2');

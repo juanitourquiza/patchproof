@@ -62,7 +62,7 @@ function isPhpSafeSqlPattern(filePath: string, sqlArguments: string, content: st
     return false;
   }
 
-  if (filePath.includes('/database/migrations/') && /DB::statement\s*\(/i.test(content)) {
+  if (filePath.includes('database/migrations/') && /DB::statement\s*\(/i.test(content)) {
     return true;
   }
 

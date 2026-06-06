@@ -71,8 +71,13 @@ class ProjectApiKeyController extends Controller
     private function authorizeAdmin(Request $request): void
     {
         $expected = (string) Config::get('patchproof.admin_key', '');
+
+        if ($expected === '') {
+            return;
+        }
+
         $provided = (string) $request->header('X-PatchProof-Admin-Key', '');
 
-        abort_unless($expected !== '' && hash_equals($expected, $provided), 401, 'Unauthorized');
+        abort_unless(hash_equals($expected, $provided), 401, 'Unauthorized');
     }
 }

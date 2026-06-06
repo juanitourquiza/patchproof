@@ -120,6 +120,14 @@ describe('auditDiff', () => {
     expect(result.findings).toEqual([]);
   });
 
+  it('does not flag php migrations that use trusted database config', () => {
+    const diff = readFileSync(fixturePath('a03', 'php-migration-sql.safe.diff'), 'utf8');
+
+    const result = auditDiff(diff);
+
+    expect(result.findings).toEqual([]);
+  });
+
   it('flags php command execution built from user input', () => {
     const diff = readFileSync(fixturePath('a03', 'php-command-injection.vulnerable.diff'), 'utf8');
 

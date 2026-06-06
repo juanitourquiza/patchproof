@@ -2,13 +2,15 @@ export type OutputFormat = 'text' | 'json' | 'markdown' | 'sarif';
 export type Language = 'en' | 'es';
 
 export interface CliOptions {
-  readonly command: 'paudit' | 'audit' | 'ppscan' | 'init' | 'rules' | 'help' | 'version';
+  readonly command: 'paudit' | 'audit' | 'ppscan' | 'report' | 'init' | 'rules' | 'help' | 'version';
   readonly file?: string;
   readonly targetPath?: string;
   readonly useGitDiff: boolean;
   readonly includeIgnored: boolean;
   readonly output: OutputFormat | null;
   readonly outputProvided: boolean;
+  readonly report?: string;
+  readonly reportProvided: boolean;
   readonly failOn: 'critical' | 'high' | 'medium' | 'low' | null;
   readonly failOnProvided: boolean;
   readonly lang: Language | null;
@@ -18,7 +20,7 @@ export interface CliOptions {
 const validFormats = new Set<OutputFormat>(['text', 'json', 'markdown', 'sarif']);
 const validSeverities = new Set<CliOptions['failOn']>(['critical', 'high', 'medium', 'low']);
 const validLanguages = new Set<Language>(['en', 'es']);
-const commandNames = new Set<CliOptions['command']>(['paudit', 'audit', 'ppscan', 'init', 'rules', 'help', 'version']);
+const commandNames = new Set<CliOptions['command']>(['paudit', 'audit', 'ppscan', 'report', 'init', 'rules', 'help', 'version']);
 
 export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
   const [first = 'help', ...rest] = argv;
@@ -49,7 +51,7 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
     return defaultOptions(command);
   }
 
-  if (command !== 'audit' && command !== 'paudit' && command !== 'ppscan') {
+  if (command !== 'audit' && command !== 'paudit' && command !== 'ppscan' && command !== 'report') {
     return defaultOptions('help');
   }
 
@@ -59,6 +61,8 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
   let includeIgnored = false;
   let output: OutputFormat | null = null;
   let outputProvided = false;
+  let report: string | undefined;
+  let reportProvided = false;
   let failOn: CliOptions['failOn'] = null;
   let failOnProvided = false;
   let lang: Language | null = null;
@@ -73,7 +77,7 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
       continue;
     }
 
-    if (command === 'ppscan' && !value.startsWith('--') && !targetPath) {
+    if ((command === 'ppscan' || command === 'report') && !value.startsWith('--') && !targetPath) {
       targetPath = value;
       continue;
     }
@@ -95,6 +99,13 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
       }
       output = candidate;
       outputProvided = true;
+      index += 1;
+      continue;
+    }
+
+    if (value === '--report') {
+      report = requiredValue(options, index, '--report');
+      reportProvided = true;
       index += 1;
       continue;
     }
@@ -132,6 +143,8 @@ export function parseArgs(argv: string[], runtimeName = ''): CliOptions {
     includeIgnored,
     output,
     outputProvided,
+    report,
+    reportProvided,
     failOn,
     failOnProvided,
     lang,
@@ -146,6 +159,8 @@ function defaultOptions(command: CliOptions['command']): CliOptions {
     includeIgnored: false,
     output: 'text',
     outputProvided: false,
+    report: undefined,
+    reportProvided: false,
     failOn: null,
     failOnProvided: false,
     lang: null,

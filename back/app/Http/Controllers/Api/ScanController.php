@@ -4,11 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Project;
-use App\Models\ProjectApiKey;
 use App\Models\Scan;
 use App\Http\Resources\ScanResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Support\Str;
 
 class ScanController extends Controller
 {
@@ -16,6 +17,8 @@ class ScanController extends Controller
     {
         $validated = $request->validate([
             'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+            'project_name' => ['nullable', 'string', 'max:120'],
+            'project_slug' => ['nullable', 'string', 'max:120', 'alpha_dash'],
             'status' => ['nullable', 'in:queued,completed,failed'],
             'language' => ['nullable', 'in:en,es'],
             'source' => ['nullable', 'string', 'max:50'],
@@ -49,7 +52,9 @@ class ScanController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
-            'project_id' => ['required', 'integer', 'exists:projects,id'],
+            'project_id' => ['nullable', 'integer', 'exists:projects,id'],
+            'project_name' => ['nullable', 'string', 'max:120'],
+            'project_slug' => ['nullable', 'string', 'max:120', 'alpha_dash', Rule::unique('projects', 'slug')],
             'source' => ['nullable', 'string', 'max:50'],
             'language' => ['nullable', 'in:en,es'],
             'fail_on' => ['nullable', 'in:critical,high,medium,low'],
@@ -61,8 +66,7 @@ class ScanController extends Controller
             'report_url' => ['nullable', 'string', 'max:2048'],
         ]);
 
-        $project = Project::findOrFail($validated['project_id']);
-        $this->authorizeProjectKey($request, $project);
+        $project = $this->resolveProject($validated);
 
         $scan = $project->scans()->create([
             'source' => $validated['source'] ?? 'cli',
@@ -95,39 +99,57 @@ class ScanController extends Controller
         ], 201);
     }
 
-    private function authorizeProjectKey(Request $request, Project $project): void
+    private function resolveProject(array $validated): Project
     {
-        $plainText = $this->extractToken($request);
-
-        if ($plainText === null) {
-            abort(401, 'Unauthorized');
+        if (!empty($validated['project_id'])) {
+            return Project::findOrFail($validated['project_id']);
         }
 
-        $keyHash = hash('sha256', $plainText);
+        $name = trim((string) ($validated['project_name'] ?? ''));
+        $slug = trim((string) ($validated['project_slug'] ?? ''));
 
-        $apiKey = ProjectApiKey::query()
-            ->where('project_id', $project->id)
-            ->where('key_hash', $keyHash)
-            ->whereNull('revoked_at')
-            ->first();
+        if ($slug !== '') {
+            $project = Project::where('slug', $slug)->first();
 
-        if ($apiKey === null) {
-            abort(401, 'Unauthorized');
+            if ($project !== null) {
+                if ($name !== '' && $project->name !== $name) {
+                    $project->forceFill(['name' => $name])->save();
+                }
+
+                return $project;
+            }
+
+            return Project::create([
+                'name' => $name !== '' ? $name : Str::headline(str_replace('-', ' ', $slug)),
+                'slug' => $slug,
+                'description' => null,
+            ]);
         }
 
-        $apiKey->forceFill(['last_used_at' => now()])->save();
+        if ($name !== '') {
+            $generatedSlug = $this->generateUniqueSlug($name);
+
+            return Project::create([
+                'name' => $name,
+                'slug' => $generatedSlug,
+                'description' => null,
+            ]);
+        }
+
+        abort(422, 'project_id or project_name/project_slug is required');
     }
 
-    private function extractToken(Request $request): ?string
+    private function generateUniqueSlug(string $name): string
     {
-        $header = (string) $request->bearerToken();
+        $base = Str::slug($name) ?: 'project';
+        $slug = $base;
+        $suffix = 1;
 
-        if ($header !== '') {
-            return $header;
+        while (Project::where('slug', $slug)->exists()) {
+            $slug = $base.'-'.$suffix;
+            $suffix++;
         }
 
-        $header = trim((string) $request->header('X-PatchProof-Key', ''));
-
-        return $header !== '' ? $header : null;
+        return $slug;
     }
 }

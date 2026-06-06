@@ -9,6 +9,7 @@ const strongProtectionTokens = ['auth', 'account-me', 'account-first', 'can:', '
 const publicByDesignPatterns = [
   /\/accounts\/\{account_id\}\/(public|posts|posts\/favorites|posts\/saved|posts\/me|trendings|chats|replies|stats|notifications|addresses|products|followings|followers|blockeds|purchases)\b/i,
   /\/accounts\/\{report_account_id\}\/reports\b/i,
+  /\/payments\/methods\/\{payment_method_id\}/i,
   /\/emails\/(unsubscribe|codes|contacts|[^\s'"]+)\b/i,
   /\/stripe\/oauth\/token\b/i,
   /\/documentation(?:-admin)?\.json\b/i,
@@ -18,6 +19,7 @@ const publicByDesignPatterns = [
   /\/algorithm\/posts\/\{post_id\}/i,
   /\/providers\/status\b/i,
   /\/shippings\b/i,
+  /\/sales\/\{transaction_id\}\/status\b/i,
   /\/version\b/i
 ];
 const publicByDesignPattern = /\b(?:auth-optional|public-key|publicProfile|public\/posts|unsubscribe|verify|publicPaymentLink)\b/i;

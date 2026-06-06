@@ -11,6 +11,8 @@ describe('parseArgs', () => {
       includeIgnored: false,
       output: 'sarif',
       outputProvided: true,
+      report: undefined,
+      reportProvided: false,
       failOn: 'medium',
       failOnProvided: true,
       lang: 'es',
@@ -27,6 +29,8 @@ describe('parseArgs', () => {
       includeIgnored: false,
       output: null,
       outputProvided: false,
+      report: undefined,
+      reportProvided: false,
       failOn: null,
       failOnProvided: false,
       lang: null,
@@ -47,6 +51,26 @@ describe('parseArgs', () => {
       includeIgnored: true,
       output: 'markdown',
       outputProvided: true,
+      report: undefined,
+      reportProvided: false,
+      failOn: null,
+      failOnProvided: false,
+      lang: null,
+      langProvided: false
+    });
+  });
+
+  it('parses report command and output file', () => {
+    expect(parseArgs(['report', '/tmp/project', '--report', 'patchproof-report.md'])).toEqual({
+      command: 'report',
+      file: undefined,
+      targetPath: '/tmp/project',
+      useGitDiff: false,
+      includeIgnored: false,
+      output: null,
+      outputProvided: false,
+      report: 'patchproof-report.md',
+      reportProvided: true,
       failOn: null,
       failOnProvided: false,
       lang: null,

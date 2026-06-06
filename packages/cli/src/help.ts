@@ -7,12 +7,14 @@ export function helpText(): string {
     '  2. patchproof paudit --file changes.diff',
     '  3. git diff | patchproof paudit',
     '  4. ppscan /path/to/repo --format markdown',
+    '  5. patchproof report /path/to/repo --report patchproof-report.md',
     '',
     'What it does:',
     '  - paudit --diff    audits the current repo diff',
     '  - paudit --file    audits a saved diff file',
     '  - git diff | paudit audits piped diff text',
     '  - ppscan           scans a repo working tree',
+    '  - report           scans a repo and writes a report file',
     '',
     'Other commands:',
     '  patchproof rules   list built-in rules',
@@ -26,8 +28,13 @@ export function helpText(): string {
     '  --file <path>          Read a unified diff from a file',
     '  --include-ignored      ppscan: include ignored files like dist/',
     '  --format <format>      text, json, markdown, or sarif',
+    '  --report <path>        Write the formatted report to a file',
     '  --fail-on <severity>   critical, high, medium, or low. Default: high',
-    '  --lang <lang>          en or es. Default: en'
+    '  --lang <lang>          en or es. Default: en',
+    '',
+    'Scan rules:',
+    '  - ppscan always skips AI-assistant folders like .claude/,.cursor/,.windsurf/, and .copilot/.',
+    '  - The scanner is intended to report on code, not agent instructions or prompt files.'
   ].join('\n');
 }
 

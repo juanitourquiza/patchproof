@@ -745,6 +745,20 @@
                         {{ scanResultSummary(scan) }}
                       </p>
                     </section>
+
+                    <section class="result-hero">
+                      <span class="result-hero__label">Security score</span>
+                      <strong [style.font-size.rem]="2">{{ scanResult(scan).score }}/100</strong>
+                      <p>{{ scanResultRecommendation(scan) }}</p>
+                      <div
+                        class="progress"
+                        [style.margin-top.px]="12"
+                        role="img"
+                        [attr.aria-label]="'Security score ' + scanResult(scan).score + ' out of 100'"
+                      >
+                        <span [style.width.%]="scanResult(scan).score"></span>
+                      </div>
+                    </section>
                   </div>
 
                   <div class="mini-panel">

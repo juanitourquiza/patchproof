@@ -38,7 +38,7 @@ const allowedExtensions = new Set([
   '.svelte'
 ]);
 
-const alwaysIgnoredDirs = new Set(['.git', 'node_modules', 'vendor']);
+const alwaysIgnoredDirs = new Set(['.git', 'node_modules', 'vendor', '.claude', '.cursor', '.windsurf', '.copilot']);
 const ignoredWhenNotIncludedDirs = new Set(['dist', 'build', 'coverage', '.angular', '.cache', '.next', '.turbo', '.nx']);
 
 export interface WorkspaceScanOptions {
@@ -148,8 +148,17 @@ function shouldScanPath(entry: string, includeIgnored: boolean): boolean {
     return false;
   }
 
+  const segments = entry.split(/[\\/]/);
+
+  if (segments.some((segment) => alwaysIgnoredDirs.has(segment))) {
+    return false;
+  }
+
+  if (entry.includes('/.claude/') || entry.includes('/.cursor/') || entry.includes('/.windsurf/') || entry.includes('/.copilot/')) {
+    return false;
+  }
+
   if (!includeIgnored) {
-    const segments = entry.split(/[\\/]/);
     if (segments.some((segment) => ignoredWhenNotIncludedDirs.has(segment))) {
       return false;
     }

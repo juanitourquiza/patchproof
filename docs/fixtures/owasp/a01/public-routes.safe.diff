@@ -1,8 +1,11 @@
 diff --git a/routes/api.php b/routes/api.php
 --- a/routes/api.php
 +++ b/routes/api.php
-@@ -1,3 +1,5 @@
+@@ -1,3 +1,7 @@
  // Public by design
-+Route::get('/accounts/{account_id}/public', ['uses' => \App\Http\Controllers\PublicAccountController::class . '@show']);
-+Route::get('/documentation.json', ['uses' => \App\Http\Controllers\DocsController::class . '@show']);
-+Route::post('/accounts/{account_id}/reports', ['middleware' => ['auth', 'account', 'account-me'], 'uses' => \App\Http\Controllers\AccountReportController::class . '@store']);
+ Route::get('/crons/gls/pickup-points/sync', ['uses' => \App\Http\Controllers\CronController::class . '@syncPickupPoints']);
+-Route::get('/invitations/{email}', ['uses' => \App\Http\Controllers\AccountPermissionController::class . '@getInvitationByEmail']);
+ Route::post('/video/jobs', ['uses' => \App\Http\Controllers\VideoController::class . '@store']);
+ Route::get('/accounts/{account_id}/public', ['uses' => \App\Http\Controllers\PublicAccountController::class . '@show']);
+ Route::get('/documentation.json', ['uses' => \App\Http\Controllers\DocsController::class . '@show']);
+ Route::post('/accounts/{account_id}/reports', ['middleware' => ['auth', 'account', 'account-me'], 'uses' => \App\Http\Controllers\AccountReportController::class . '@store']);

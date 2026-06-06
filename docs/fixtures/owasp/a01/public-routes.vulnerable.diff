@@ -1,9 +1,10 @@
 diff --git a/routes/api.php b/routes/api.php
 --- a/routes/api.php
 +++ b/routes/api.php
-@@ -1,3 +1,5 @@
- // Algorithm
-+Route::post('/algorithm/posts/{post_id}', ['uses' => \App\Http\Controllers\AlgorithmController::class . '@rating']);
-
- // Cron
-+Route::get('/crons/gls/pickup-points/sync', ['uses' => \App\Http\Controllers\CronController::class . '@syncPickupPoints']);
+@@ -1,3 +1,4 @@
+ // Sensitive public route
+-Route::post('/keys/reset', ['uses' => \App\Http\Controllers\KeyController::class . '@reset']);
+-Route::get('/crons/gls/pickup-points/sync', ['uses' => \App\Http\Controllers\CronController::class . '@syncPickupPoints']);
++Route::post('/admin/cache/clear', ['uses' => \App\Http\Controllers\AdminController::class . '@clearCache']);
++
+ Route::post('/algorithm/posts/{post_id}', ['uses' => \App\Http\Controllers\AlgorithmController::class . '@rating']);

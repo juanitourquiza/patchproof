@@ -13,9 +13,21 @@ export const insecureBusinessActionRule: AuditRule = {
   title: 'Insecure business action design',
   tags: ['security', 'design', 'owasp-a04'],
   run(context): Finding[] {
+    const guardByFile = new Map<string, number[]>();
+
+    for (const line of context.addedLines) {
+      if (explicitGuardPattern.test(line.content)) {
+        const lineNumbers = guardByFile.get(line.filePath) ?? [];
+        if (line.newLine !== null) {
+          lineNumbers.push(line.newLine);
+        }
+        guardByFile.set(line.filePath, lineNumbers);
+      }
+    }
+
     return context.addedLines
       .filter((line) => line.filePath.endsWith('.php') && relevantBusinessFilesPattern.test(line.filePath))
-      .filter((line) => dangerousBusinessActionPattern.test(line.content) && !explicitGuardPattern.test(line.content))
+      .filter((line) => dangerousBusinessActionPattern.test(line.content) && !hasNearbyGuard(line, guardByFile))
       .map((line) =>
         createFinding({
           ruleId: insecureBusinessActionRule.id,
@@ -30,3 +42,13 @@ export const insecureBusinessActionRule: AuditRule = {
       );
   }
 };
+
+function hasNearbyGuard(line: { filePath: string; newLine: number | null }, guardByFile: Map<string, number[]>): boolean {
+  if (line.newLine === null) {
+    return false;
+  }
+
+  const currentLine = line.newLine;
+  const guardLines = guardByFile.get(line.filePath) ?? [];
+  return guardLines.some((guardLine) => Math.abs(guardLine - currentLine) <= 5);
+}

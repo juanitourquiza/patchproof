@@ -2,13 +2,17 @@
 
 PatchProof es una herramienta open source para revisar **diffs de código generados por agentes de IA** antes de hacer commit, abrir un PR o mezclar cambios.
 
+Última release: `v0.3.0`
+
+Baseline de referencia auditado en este workspace: `0 findings` en el repo PHP de ejemplo.
+
 La idea no es reemplazar SonarQube, Semgrep o una auditoría humana. La idea es cubrir un flujo muy concreto: cuando Claude Code, Cursor, Copilot, Windsurf u otro agente genera cambios, PatchProof revisa el `git diff` y marca patrones peligrosos que suelen aparecer en código generado por IA.
 
 ## Estado actual
 
 Este es un **MVP funcional de CLI**.
 
-El backend Laravel de `back/` ya existe y guarda proyectos, scans y llaves API de proyecto para la ingesta hospedada.
+El backend Laravel de `back/` ya existe y guarda proyectos, scans y llaves API de proyecto para la ingesta hospedada. El dashboard Angular de `front/` ya muestra proyectos, resumen, historial, llaves API y permite crear proyectos.
 
 Ya hace:
 
@@ -26,6 +30,7 @@ Ya hace:
   - JSON;
   - Markdown;
   - SARIF para GitHub Security.
+- Permite generar reportes tanto desde la UI del dashboard como desde CLI.
 - Devuelve exit code `1` cuando encuentra hallazgos que deberían bloquear CI.
 
 Todavía falta:
@@ -37,6 +42,8 @@ Todavía falta:
 - Gestión de llaves API de proyecto y subida autenticada de scans.
 - El dashboard Angular de `front/` ya muestra proyectos, resumen, historial y llaves API; la llave admin se guarda localmente en el navegador para habilitar la gestión de llaves.
 - Publicar el paquete en npm para usar `npx patchproof`.
+
+PatchProof también entrega remediaciones determinísticas por hallazgo y, de forma opcional, enriquecimiento con IA para obtener más contexto o alternativas de solución.
 
 ## Estructura
 
@@ -97,6 +104,18 @@ Para revisar un repositorio completo:
 
 ```bash
 node packages/cli/dist/index.js ppscan /ruta/al/repo --format markdown
+```
+
+Para generar un reporte directo desde CLI:
+
+```bash
+node packages/cli/dist/index.js report /ruta/al/repo --report patchproof-report.md
+```
+
+Si prefieres, también puedes usar `ppscan` con `--report` para escanear y exportar al mismo tiempo:
+
+```bash
+node packages/cli/dist/index.js ppscan /ruta/al/repo --format markdown --report patchproof-report.md
 ```
 
 Para verlo como JSON:
