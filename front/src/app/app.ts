@@ -848,9 +848,9 @@ export class App implements OnInit {
       return 100;
     }
 
-    const score = 100 - counts.critical * 35 - counts.high * 20 - counts.medium * 10 - counts.low * 5;
+    const score = 100 - counts.critical * 25 - counts.high * 15 - counts.medium * 8 - counts.low * 3;
 
-    return Math.max(0, Math.min(100, score));
+    return Math.max(10, Math.min(100, score));
   }
 
   private verdictForScore(score: number, findingTotal: number): string {
@@ -858,11 +858,11 @@ export class App implements OnInit {
       return 'clean';
     }
 
-    if (score >= 70) {
+    if (score >= 75) {
       return 'low-risk';
     }
 
-    if (score >= 40) {
+    if (score >= 50) {
       return 'moderate';
     }
 
@@ -937,6 +937,10 @@ export class App implements OnInit {
       default:
         return copy.result.recommendation.fallback;
     }
+  }
+
+  protected scoreFormula(scan?: ScanRecord): string {
+    return scan?.result?.formula ?? this.ui().result.scoreFormula;
   }
 
   private worstResultSeverity(counts: { critical: number; high: number; medium: number; low: number }): string {

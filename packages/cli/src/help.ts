@@ -17,6 +17,7 @@ export function helpText(): string {
     '  - ppscan           scans a repo working tree',
     '  - scan             interactive repo scan with save/report choices',
     '  - report           scans a repo and writes a report file',
+    '  - score formula    100 - (critical × 25) - (high × 15) - (medium × 8) - (low × 3), floor 10',
     '',
     'Other commands:',
     '  patchproof rules   list built-in rules',

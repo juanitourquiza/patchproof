@@ -9,6 +9,7 @@ export interface HostedScanResult {
   readonly label: string;
   readonly summary: string;
   readonly recommendation: string;
+  readonly formula: string;
   readonly finding_total: number;
   readonly severity: string;
 }
@@ -80,6 +81,7 @@ export function summarizeScan(result: AuditResult): HostedScanResult {
     label: labelForVerdict(verdict),
     summary: summaryFor(findingTotal, severity, counts),
     recommendation: recommendationFor(verdict, findingTotal),
+    formula: scoreFormula(),
     finding_total: findingTotal,
     severity
   };
@@ -148,6 +150,7 @@ export function formatHostedResultCard(result: HostedScanResult, lang: Language)
     `│ ${text.label}: ${result.label}`,
     `│ ${text.summary}: ${result.summary}`,
     `│ ${text.recommendation}: ${result.recommendation}`,
+    `│ ${text.formula}: ${result.formula}`,
     '╰────────────────────────────────────'
   ].join('\n');
 }
@@ -183,8 +186,8 @@ function calculateScore(
     return 100;
   }
 
-  const score = 100 - counts.critical * 35 - counts.high * 20 - counts.medium * 10 - counts.low * 5;
-  return Math.max(0, Math.min(100, score));
+  const score = 100 - counts.critical * 25 - counts.high * 15 - counts.medium * 8 - counts.low * 3;
+  return Math.max(10, Math.min(100, score));
 }
 
 function verdictForScore(score: number, findingTotal: number): string {
@@ -196,11 +199,11 @@ function verdictForScore(score: number, findingTotal: number): string {
     return 'clean';
   }
 
-  if (score >= 70) {
+  if (score >= 75) {
     return 'low-risk';
   }
 
-  if (score >= 40) {
+  if (score >= 50) {
     return 'moderate';
   }
 
@@ -270,6 +273,10 @@ function worstSeverity(counts: { critical: number; high: number; medium: number;
   return 'none';
 }
 
+function scoreFormula(): string {
+  return 'Score formula: 100 - (critical × 25) - (high × 15) - (medium × 8) - (low × 3), with a minimum floor of 10.';
+}
+
 async function readErrorBody(response: Response): Promise<string> {
   try {
     const text = await response.text();
@@ -286,6 +293,7 @@ const hostedCopy: Record<Language, {
   readonly label: string;
   readonly summary: string;
   readonly recommendation: string;
+  readonly formula: string;
 }> = {
   en: {
     heading: 'Scan result',
@@ -293,7 +301,8 @@ const hostedCopy: Record<Language, {
     verdict: 'Verdict',
     label: 'Label',
     summary: 'Summary',
-    recommendation: 'Recommendation'
+    recommendation: 'Recommendation',
+    formula: 'Formula'
   },
   es: {
     heading: 'Resultado del scan',
@@ -301,6 +310,7 @@ const hostedCopy: Record<Language, {
     verdict: 'Veredicto',
     label: 'Etiqueta',
     summary: 'Resumen',
-    recommendation: 'Recomendación'
+    recommendation: 'Recomendación',
+    formula: 'Fórmula'
   }
 };

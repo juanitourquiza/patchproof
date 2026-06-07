@@ -20,6 +20,7 @@ describe('hosted scan helpers', () => {
       label: 'Clean result',
       summary: 'No findings were recorded. Keep the clean baseline for future comparisons.',
       recommendation: 'No immediate issues were found. Keep the clean result as a baseline and scan again after the next change.',
+      formula: 'Score formula: 100 - (critical × 25) - (high × 15) - (medium × 8) - (low × 3), with a minimum floor of 10.',
       finding_total: 0,
       severity: 'none'
     });

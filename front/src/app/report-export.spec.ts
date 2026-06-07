@@ -107,7 +107,7 @@ describe('report-export', () => {
 
     expect(parsed.summary.total).toBe(0);
     expect(parsed.summary.files).toBe(37);
-    expect(parsed.result.score).toBe(80);
+    expect(parsed.result.score).toBe(85);
     expect(parsed.result.label).toBe('Low-risk result');
     expect(parsed.result.finding_total).toBe(1);
     expect(parsed.ai_review).toBeNull();

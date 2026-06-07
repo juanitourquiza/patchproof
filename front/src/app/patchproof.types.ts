@@ -72,6 +72,7 @@ export interface ScanResultRecord {
   label: string;
   summary: string;
   recommendation: string;
+  formula?: string;
   finding_total: number;
   severity: string;
 }

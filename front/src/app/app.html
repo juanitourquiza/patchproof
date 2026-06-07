@@ -39,8 +39,8 @@
           <button
             type="button"
             class="sidebar-rail__button sidebar-rail__button--primary"
-            title="New project"
-            aria-label="New project"
+            [attr.title]="ui().sidebar.newProject"
+            [attr.aria-label]="ui().sidebar.newProject"
             (click)="openNewProjectForm()"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -51,8 +51,8 @@
             type="button"
             class="sidebar-rail__button"
             [class.active]="sidebarSection() === 'projects'"
-            title="Projects"
-            aria-label="Projects"
+            [attr.title]="ui().sidebar.projects"
+            [attr.aria-label]="ui().sidebar.projects"
             (click)="activateSidebarSection('projects')"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -66,8 +66,8 @@
             type="button"
             class="sidebar-rail__button"
             [class.active]="sidebarSection() === 'scans'"
-            title="Scans"
-            aria-label="Scans"
+            [attr.title]="locale() === 'es' ? 'Escaneos' : 'Scans'"
+            [attr.aria-label]="locale() === 'es' ? 'Escaneos' : 'Scans'"
             (click)="activateSidebarSection('scans')"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -79,8 +79,8 @@
             type="button"
             class="sidebar-rail__button"
             [class.active]="sidebarSection() === 'policies'"
-            title="Policies"
-            aria-label="Policies"
+            [attr.title]="locale() === 'es' ? 'Políticas' : 'Policies'"
+            [attr.aria-label]="locale() === 'es' ? 'Políticas' : 'Policies'"
             (click)="activateSidebarSection('policies')"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -92,8 +92,8 @@
             type="button"
             class="sidebar-rail__button"
             [class.active]="sidebarSection() === 'settings'"
-            title="Settings"
-            aria-label="Settings"
+            [attr.title]="locale() === 'es' ? 'Ajustes' : 'Settings'"
+            [attr.aria-label]="locale() === 'es' ? 'Ajustes' : 'Settings'"
             (click)="activateSidebarSection('settings')"
           >
             <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -197,7 +197,7 @@
           [class.active]="sidebarSection() === 'scans'"
           (click)="activateSidebarSection('scans')"
         >
-          Scans
+          {{ locale() === 'es' ? 'Escaneos' : 'Scans' }}
         </button>
         <button
           type="button"
@@ -205,7 +205,7 @@
           [class.active]="sidebarSection() === 'policies'"
           (click)="activateSidebarSection('policies')"
         >
-          Policies
+          {{ locale() === 'es' ? 'Políticas' : 'Policies' }}
         </button>
         <button
           type="button"
@@ -213,7 +213,7 @@
           [class.active]="sidebarSection() === 'settings'"
           (click)="activateSidebarSection('settings')"
         >
-          Settings
+          {{ locale() === 'es' ? 'Ajustes' : 'Settings' }}
         </button>
       </nav>
 
@@ -236,14 +236,14 @@
 
             @if (aiSettingsError()) {
               <div class="state state-compact state-error">
-                <strong>AI settings could not be saved</strong>
+                <strong>{{ locale() === 'es' ? 'No se pudieron guardar los ajustes de IA' : 'AI settings could not be saved' }}</strong>
                 <p>{{ aiSettingsError() }}</p>
               </div>
             }
 
             <div class="chips chips-compact">
               <span class="chip" [ngClass]="aiSettings()?.configured ? 'ok' : 'warn'">
-                {{ aiSettings()?.configured ? 'Configured' : 'Not configured' }}
+                {{ aiSettings()?.configured ? (locale() === 'es' ? 'Configurado' : 'Configured') : (locale() === 'es' ? 'No configurado' : 'Not configured') }}
               </span>
               <span class="chip neutral">{{ aiSettings()?.provider || 'openai' }}</span>
               <span class="chip">{{ aiSettings()?.model || 'gpt-4.1-mini' }}</span>
@@ -256,13 +256,13 @@
                 (change)="aiEnabledDraft.set($any($event.target).checked)"
               />
               <span>
-                <strong>Enable AI review</strong>
-                <small>Advisory only; never blocks CI by default.</small>
+                <strong>{{ locale() === 'es' ? 'Habilitar revisión IA' : 'Enable AI review' }}</strong>
+                <small>{{ ui().review.aiReviewAdvisory }}</small>
               </span>
             </label>
 
             <label class="field">
-              <span>Provider</span>
+              <span>{{ locale() === 'es' ? 'Proveedor' : 'Provider' }}</span>
               <select
                 [value]="aiProviderDraft()"
                 (change)="aiProviderDraft.set($any($event.target).value)"
@@ -274,11 +274,11 @@
             </label>
 
             <p class="tool-card__help">
-              {{ selectedAiProvider()?.description || 'Pick a provider for advisory AI review.' }}
+              {{ selectedAiProvider()?.description || (locale() === 'es' ? 'Elige un proveedor para la revisión IA.' : 'Pick a provider for advisory AI review.') }}
             </p>
 
             <label class="field">
-              <span>Model</span>
+              <span>{{ locale() === 'es' ? 'Modelo' : 'Model' }}</span>
               <input
                 type="text"
                 autocomplete="off"
@@ -291,7 +291,7 @@
 
             @if (selectedAiProvider()?.needs_base_url || aiProviderDraft() === 'openai') {
               <label class="field">
-                <span>Base URL</span>
+                <span>{{ locale() === 'es' ? 'URL base' : 'Base URL' }}</span>
                 <input
                   type="text"
                   autocomplete="off"
@@ -304,21 +304,21 @@
             }
 
             <label class="field">
-              <span>API key</span>
+              <span>{{ locale() === 'es' ? 'Clave API' : 'API key' }}</span>
               <input
                 type="password"
                 autocomplete="off"
                 spellcheck="false"
                 [value]="aiApiKeyDraft()"
                 (input)="aiApiKeyDraft.set($any($event.target).value)"
-                [placeholder]="aiSettings()?.api_key_configured ? 'Leave blank to keep saved key' : 'sk-...'"
+                [placeholder]="aiSettings()?.api_key_configured ? (locale() === 'es' ? 'Deja en blanco para conservar la clave guardada' : 'Leave blank to keep saved key') : 'sk-...'"
               />
             </label>
 
             <div class="tool-card__meta">
               <span class="meta">{{ aiApiKeyHint() }}</span>
               @if (aiSettings()?.api_key_configured) {
-                <span class="meta">Current key source: {{ aiSettings()?.api_key_source }}</span>
+                <span class="meta">{{ locale() === 'es' ? 'Origen de la clave actual' : 'Current key source' }}: {{ aiSettings()?.api_key_source }}</span>
               }
             </div>
 
@@ -329,7 +329,7 @@
                 [disabled]="aiSettingsSaving() || !aiSettings()?.api_key_configured"
                 (click)="clearSavedAiKey()"
               >
-                Clear saved key
+                {{ locale() === 'es' ? 'Borrar clave guardada' : 'Clear saved key' }}
               </button>
               <button
                 type="button"
@@ -337,7 +337,7 @@
                 [disabled]="aiSettingsSaving()"
                 (click)="saveAiSettings()"
               >
-                {{ aiSettingsSaving() ? 'Saving…' : 'Save locally' }}
+                {{ aiSettingsSaving() ? (locale() === 'es' ? 'Guardando…' : 'Saving…') : (locale() === 'es' ? 'Guardar localmente' : 'Save locally') }}
               </button>
             </div>
 
@@ -536,7 +536,7 @@
 
             @if (exportReportError()) {
               <div class="state state-compact state-error">
-                <strong>Report export failed</strong>
+                <strong>{{ locale() === 'es' ? 'Falló la exportación del reporte' : 'Report export failed' }}</strong>
                 <p>{{ exportReportError() }}</p>
               </div>
             }
@@ -763,6 +763,7 @@
                       >
                         <span [style.width.%]="scanResult(scan).score"></span>
                       </div>
+                      <p class="detail-copy detail-meta-copy">{{ scoreFormula(scan) }}</p>
                     </section>
                   </div>
 
@@ -771,7 +772,7 @@
                     @if ((scan.findings || []).length === 0) {
                       <div class="state state-compact">
                         <strong>{{ ui().result.noFindingsRecorded }}</strong>
-                        <p>This scan did not store any findings in the report payload, but it still has a clean result score.</p>
+                        <p>{{ locale() === 'es' ? 'Este scan no guardó hallazgos en el payload del reporte, pero igual tiene una puntuación limpia.' : 'This scan did not store any findings in the report payload, but it still has a clean result score.' }}</p>
                       </div>
                     } @else {
                       <div class="finding-list">
@@ -961,7 +962,7 @@
                           </div>
                           <p class="scan-summary">{{ scanResultSummary(scan) }}</p>
                           <p class="scan-summary scan-summary--project">
-                            Reviewed project: {{ scanRepositoryLabel(scan) }}
+                            {{ ui().result.reviewedProject }}: {{ scanRepositoryLabel(scan) }}
                           </p>
                         </div>
 

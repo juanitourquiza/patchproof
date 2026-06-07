@@ -13,6 +13,7 @@ class ScanResultService
      *   label: string,
      *   summary: string,
      *   recommendation: string,
+     *   formula: string,
      *   finding_total: int,
      *   severity: string
      * }
@@ -35,6 +36,7 @@ class ScanResultService
             'label' => $this->labelForVerdict($verdict),
             'summary' => $this->summaryFor($findingTotal, $severity, $counts),
             'recommendation' => $this->recommendationFor($verdict, $findingTotal),
+            'formula' => $this->scoreFormula(),
             'finding_total' => $findingTotal,
             'severity' => $severity,
         ];
@@ -80,12 +82,12 @@ class ScanResultService
         }
 
         $score = 100
-            - ($counts['critical'] * 35)
-            - ($counts['high'] * 20)
-            - ($counts['medium'] * 10)
-            - ($counts['low'] * 5);
+            - ($counts['critical'] * 25)
+            - ($counts['high'] * 15)
+            - ($counts['medium'] * 8)
+            - ($counts['low'] * 3);
 
-        return max(0, min(100, $score));
+        return max(10, min(100, $score));
     }
 
     private function verdictForScore(int $score, int $findingTotal): string
@@ -98,15 +100,20 @@ class ScanResultService
             return 'clean';
         }
 
-        if ($score >= 70) {
+        if ($score >= 75) {
             return 'low-risk';
         }
 
-        if ($score >= 40) {
+        if ($score >= 50) {
             return 'moderate';
         }
 
         return 'high-risk';
+    }
+
+    public function scoreFormula(): string
+    {
+        return 'Score formula: 100 - (critical × 25) - (high × 15) - (medium × 8) - (low × 3), with a minimum floor of 10.';
     }
 
     private function labelForVerdict(string $verdict): string

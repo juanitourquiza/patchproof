@@ -75,6 +75,7 @@ export interface UiCopy {
     readonly noRemediationGuidance: string;
     readonly reviewedProject: string;
     readonly securityScore: string;
+    readonly scoreFormula: string;
     readonly projectDetails: string;
     readonly evidence: string;
     readonly fix: string;
@@ -212,6 +213,7 @@ const enCopy: UiCopy = {
     noRemediationGuidance: 'No remediation guidance',
     reviewedProject: 'Reviewed project',
     securityScore: 'Security score',
+    scoreFormula: 'Score formula: 100 - (critical × 25) - (high × 15) - (medium × 8) - (low × 3), with a minimum floor of 10.',
     projectDetails: 'Project details',
     evidence: 'Evidence',
     fix: 'Fix',
@@ -328,6 +330,7 @@ const esCopy: UiCopy = {
     noRemediationGuidance: 'Sin guía de remediación',
     reviewedProject: 'Proyecto revisado',
     securityScore: 'Puntuación de seguridad',
+    scoreFormula: 'Fórmula: 100 - (crítico × 25) - (alto × 15) - (medio × 8) - (bajo × 3), con un piso mínimo de 10.',
     projectDetails: 'Detalles del proyecto',
     evidence: 'Evidencia',
     fix: 'Corrección',

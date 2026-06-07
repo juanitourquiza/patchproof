@@ -566,9 +566,9 @@ function calculateScanScore(
     return 100;
   }
 
-  const score = 100 - counts.critical * 35 - counts.high * 20 - counts.medium * 10 - counts.low * 5;
+  const score = 100 - counts.critical * 25 - counts.high * 15 - counts.medium * 8 - counts.low * 3;
 
-  return Math.max(0, Math.min(100, score));
+  return Math.max(10, Math.min(100, score));
 }
 
 function verdictForScore(score: number, findingTotal: number): string {
@@ -576,11 +576,11 @@ function verdictForScore(score: number, findingTotal: number): string {
     return 'clean';
   }
 
-  if (score >= 70) {
+  if (score >= 75) {
     return 'low-risk';
   }
 
-  if (score >= 40) {
+  if (score >= 50) {
     return 'moderate';
   }
 
